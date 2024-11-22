@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Lib", "Gwint.Lib\Gwint.Lib.csproj", "{452F3CFF-7EE7-47AA-9135-2C074BAB80F4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Api", "Gwint.Api\Gwint.Api.csproj", "{086D28F2-6A13-4D2F-A440-E3F925F40023}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Contracts", "Gwint.Contracts\Gwint.Contracts.csproj", "{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gwint.Client", "Gwint.Client\Gwint.Client.csproj", "{AF50090F-A553-4620-8AA6-BBF132E919FA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{452F3CFF-7EE7-47AA-9135-2C074BAB80F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{452F3CFF-7EE7-47AA-9135-2C074BAB80F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{452F3CFF-7EE7-47AA-9135-2C074BAB80F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{452F3CFF-7EE7-47AA-9135-2C074BAB80F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{086D28F2-6A13-4D2F-A440-E3F925F40023}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{086D28F2-6A13-4D2F-A440-E3F925F40023}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{086D28F2-6A13-4D2F-A440-E3F925F40023}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{086D28F2-6A13-4D2F-A440-E3F925F40023}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF50090F-A553-4620-8AA6-BBF132E919FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF50090F-A553-4620-8AA6-BBF132E919FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF50090F-A553-4620-8AA6-BBF132E919FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF50090F-A553-4620-8AA6-BBF132E919FA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B3070485-2B5E-480C-BBD1-F7D4505EEB9C}
+	EndGlobalSection
+EndGlobal

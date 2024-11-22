@@ -1,0 +1,213 @@
+body {
+    background-color: #2b2a33;
+    color: #e0e0e0;
+    font-family: "MedievalSharp", serif;
+}
+
+.game-area {
+    height: 100vh;
+    display: flex;
+    gap: 5px;
+    padding: 20px;
+    background-size: cover;
+}
+
+.game-info {
+    position: relative;
+    flex-shrink: 0;
+    flex-basis: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 15px;
+    color: #e0e0e0;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.player-section {
+    position: relative;
+    background: #3b3a47;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.player-avatar {
+    background: url('./../king_player.png') center center/cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #876445;
+}
+
+.player-avatar.opponent-avatar {
+    background: url('./../king_opponent.png') center center/cover;
+}
+
+.player-details {
+    flex-grow: 1;
+    color: #d4c19b;
+}
+
+.details-top, .details-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.round-wins, .card-count {
+    color: #f0e6d2;
+}
+
+.player-name, .deck-name {
+    font-weight: bold;
+}
+
+.player-score {
+    font-size: 1.2em;
+    color: #e0e0e0;
+    position: absolute;
+    right: 5px;
+    top: 10px;
+}
+
+.game-action {
+    position: relative;
+    flex-grow: 1;
+    display: grid;
+    grid-template-rows: repeat(7, 13.4%);
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.unit-row {
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.unit-card-wrapper {
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 100%;
+}
+
+.unit-card {
+    min-width: 60px;
+    height: 100%;
+    aspect-ratio: 2 / 3;
+    border: 1px solid #875f3e;
+    border-radius: 5px;
+    background: linear-gradient(145deg, #3a3a4e, #2b2b38);
+    color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.unit-card > img {
+    height: 100%;
+    width: 100%;
+}
+
+.unit-card:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8);
+}
+
+.accept-game-form, .select-deck-form {
+    background: rgba(43, 42, 51, 0.9);
+    color: #e0e0e0;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.accept-game-form button, .select-deck-form button {
+    background-color: #4a403a;
+    color: #e0e0e0;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.accept-game-form button:hover, .select-deck-form button:hover {
+    background-color: #876445;
+}
+
+.end-round {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.end-round button {
+    background-color: #5d524b;
+    color: #e0e0e0;
+    padding: 8px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.end-round button:hover {
+    background-color: #a37d6e;
+}
+
+.opponent-accepted, .opponent-selected-deck {
+    font-weight: bold;
+    color: #d4c19b;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #3b3a47;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.card-selection {
+    display: flex;
+    justify-content: space-around;
+}
+
+.card-selection > .unit-card-wrapper {
+    height: 300px;
+}

@@ -1,0 +1,94 @@
+﻿@page "/"
+@using Gwint.Client.Services
+@using Gwint.Contracts
+@implements IAsyncDisposable
+@inject GameRoomService GameRoomService
+@inject NavigationManager Navigation
+
+<h3>Available Game Rooms</h3>
+<ul>
+    @foreach (var room in _rooms)
+    {
+        <li>
+            @room.Id
+            <button @onclick="() => SelectRoom(room)">Join Room</button>
+        </li>
+    }
+</ul>
+
+<div>
+    <button @onclick="ClickCreateRoom" >Create Room</button>
+</div>
+
+@if (_showCreateRoomForm)
+{
+    <div>
+        <h3>Create Room</h3>
+        <input @bind="_userName" />
+        <button @onclick="CreateRoom">Join</button>
+    </div>
+}
+
+@if (_showJoinRoomForm)
+{
+    <div>
+        <h3>Join Room: @_selectedRoom?.Id</h3>
+        <input @bind="_userName" />
+        <button @onclick="JoinSelectedRoom">Join</button>
+    </div>
+}
+
+@code {
+    private bool _showCreateRoomForm;
+    private bool _showJoinRoomForm;
+    private string _userName = string.Empty;
+    private GameRoomDto? _selectedRoom;
+    private List<GameRoomDto> _rooms = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        GameRoomService.OnRoomsUpdated += rooms =>
+        {
+            _rooms = rooms;
+            StateHasChanged();
+        };
+        
+        await GameRoomService.StartAsync();
+
+        _rooms = await GameRoomService.GetAllRooms();
+    }
+
+    private void ClickCreateRoom()
+    {
+        _showCreateRoomForm = true;
+    }
+
+    private async Task CreateRoom()
+    {
+        if (!string.IsNullOrEmpty(_userName))
+        {
+            GameRoomDto room = await GameRoomService.CreateRoom(_userName);
+            Navigation.NavigateTo($"/game/{room.Id}");
+        }
+    }
+
+    private void SelectRoom(GameRoomDto room)
+    {
+        _selectedRoom = room;
+        _showJoinRoomForm = true;
+    }
+
+    private async Task JoinSelectedRoom()
+    {
+        if (!string.IsNullOrEmpty(_userName) && _selectedRoom != null)
+        {
+            await GameRoomService.JoinRoom(_selectedRoom.Id, _userName);
+            Navigation.NavigateTo($"/game/{_selectedRoom.Id}?showAcceptGameForm=true");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await GameRoomService.DisposeAsync();
+    }
+}

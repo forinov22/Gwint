@@ -1,0 +1,431 @@
+﻿@page "/game/{roomId}"
+
+@using Gwint.Api.DTOs
+@using Gwint.Client.Services
+@using Gwint.Contracts
+@using Gwint.Lib
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject GameRoomService GameRoomService
+@inject GameRoomState GameRoomState
+
+@if (_room is null)
+{
+    <div>Loading...</div>
+    return;
+}
+
+<div class="game-area">
+    <div class="game-info">
+        @if (_room.GameState.Opponent is not null)
+        {
+            <div class="opponent-info player-section">
+                <div class="player-avatar opponent-avatar"></div>
+                <div class="player-details">
+                    <div class="details-top">
+                        <div class="card-count">@_room.GameState.Opponent.Deck?.CardsInHand</div>
+                        <div class="round-wins">@_room.GameState.GameScore.OpponentRoundWins</div>
+                    </div>
+                    <div class="details-bottom">
+                        <div class="player-name">@_room.GameState.Opponent.Name</div>
+                        <div class="deck-name">@_room.GameState.Opponent?.Deck?.DeckType.ToString()</div>
+                    </div>
+                </div>
+                <div class="player-score">@_room.GameState.GameScore.OpponentTotalScore</div>
+            </div>
+            @if (_isOpponentAccepted)
+            {
+                <div class="opponent-accepted">Opponent accepted</div>
+            }
+            @if (_isOpponentSelectedDeck)
+            {
+                <div class="opponent-selected-deck">Opponent selected deck: @_opponentDeck.ToString()</div>
+            }
+        }
+        <div class="current-player-info player-section">
+            <div class="player-avatar"></div>
+            <div class="player-details">
+                <div class="details-top">
+                    <div class="card-count">@_room.GameState.Player.Deck?.Hand.Count</div>
+                    <div class="round-wins">@_room.GameState.GameScore.PlayerRoundWins</div>
+                </div>
+                <div class="details-bottom">
+                    <div class="player-name">@_room!.GameState.Player.Name</div>
+                    <div class="deck-name">@_room.GameState.Player.Deck?.DeckType.ToString()</div>
+                </div>
+            </div>
+            <div class="player-score">@_room.GameState.GameScore.PlayerTotalScore</div>
+        </div>
+        @if (_showAcceptGameForm)
+        {
+            <div class="accept-game-form">
+                <button @onclick="AcceptGame">Accept</button>
+            </div>
+        }
+        @if (_showSelectDeckForm)
+        {
+            <div class="select-deck-form">
+                <select @bind="_selectedDeckType" class="deck-selection">
+                    <option value="@DeckType.Northern" class="deck-option">Northern</option>
+                    <option value="@DeckType.Nilfgaardian" class="deck-option">Nilfgaardian</option>
+                </select>
+                <button @onclick="SelectDeck">Submit</button>
+            </div>
+        }
+        <div class="end-round">
+            <button @onclick="EndRound">End Round</button>
+        </div>
+    </div>
+    <div class="game-action">
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Siege))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Ranged))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Melee))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Melee))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Ranged))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Siege))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.Hand is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.Hand)
+                {
+                    <div class="unit-card-wrapper" @onclick="() => MakeMove(card.Id)">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl" alt="@card.Name"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        @if (_isModalVisible)
+        {
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <h3>@_modalTitle</h3>
+                    <div class="card-selection">
+                        @foreach (var card in _modalCards)
+                        {
+                            <div class="unit-card-wrapper" @onclick="() => SelectTargetCard(card.Id)">
+                                <div class="unit-card">
+                                    <img src="@card.ImageUrl" alt="@card.Name"/>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <button @onclick="CloseModal">Cancel</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (_showRoundEndedModal)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3>Round Ended</h3>
+            <p>The winner of this round is: <strong>@_roundWinner</strong></p>
+            <button @onclick="CloseRoundEndedModal">OK</button>
+        </div>
+    </div>
+}
+
+@if (_showGameEndedModal)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3>Game Ended</h3>
+            <p>The winner of the game is: <strong>@_gameWinner</strong></p>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showAcceptGameForm;
+    private bool _isOpponentAccepted;
+
+    private bool _showSelectDeckForm;
+    private DeckType _selectedDeckType;
+    private bool _isOpponentSelectedDeck;
+    private DeckType _opponentDeck;
+    
+    private string? _currentPlayedCardId;
+    private bool _isModalVisible;
+    private string _modalTitle = string.Empty;
+    private List<Card> _modalCards = [];
+    
+    private bool _showRoundEndedModal;
+    private bool _showGameEndedModal;
+    private string? _roundWinner;
+    private string? _gameWinner;
+
+    private IJSObjectReference _module = null!;
+    
+    private GameRoomDto _room = null!;
+
+    [Parameter] public string RoomId { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (GameRoomState.CurrentRoom is null)
+        {
+            return;
+        }
+
+        _room = GameRoomState.CurrentRoom;
+        
+        GameRoomService.OnOpponentJoined += opponent =>
+        {
+            _showAcceptGameForm = true;
+            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn));
+            StateHasChanged();
+        };
+
+        GameRoomService.OnOpponentAccepted += () =>
+        {
+            _isOpponentAccepted = true;
+            StateHasChanged();
+        };
+        
+        GameRoomService.OnDeckSelectStarted += () =>
+        {
+            _isOpponentAccepted = false;
+            _showSelectDeckForm = true;
+            StateHasChanged();
+        };
+
+        GameRoomService.OnOpponentSelectedDeck += deckType =>
+        {
+            _isOpponentSelectedDeck = true;
+            _opponentDeck = deckType;
+            StateHasChanged();
+        };
+
+        GameRoomService.OnGameStarted += state =>
+        {
+            _isOpponentSelectedDeck = false;
+            _room.GameState = state;
+            StateHasChanged();
+        };
+
+        GameRoomService.OnPlayerMoved += state =>
+        {
+            _room.GameState = state;
+            StateHasChanged();
+
+            if (_room.GameState.IsPlayerTurn && _room.GameState.Player.Deck.Hand.Count == 0)
+            {
+                MakeMove(null).GetAwaiter();
+            }
+        };
+        
+        GameRoomService.OnRoundEnded += HandleRoundEnded;
+        GameRoomService.OnGameEnded += HandleGameEnded;
+        
+        await GameRoomService.StartAsync();
+        
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryString = uri.Query;
+        var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
+        var showAcceptGameForm = queryDictionary["showAcceptGameForm"];
+        
+        if (showAcceptGameForm is not null)
+        {
+            _showAcceptGameForm = bool.TryParse(showAcceptGameForm, out var result) && result;
+        }
+    }
+
+    private async Task AcceptGame()
+    {
+        _showAcceptGameForm = false;
+        await GameRoomService.AcceptGame(_room.Id, _room.GameState.Player.Id);
+    }
+
+    private async Task SelectDeck()
+    {
+        _showSelectDeckForm = false;
+        await GameRoomService.SelectDeck(_room.Id, _room.GameState.Player.Id, _selectedDeckType);
+    }
+
+    private async Task MakeMove(string? cardId)
+    {
+        var card = _room.GameState.Player.Deck.Hand.FirstOrDefault(c => c.Id == cardId);
+        if (card is null)
+            return;
+        
+        _currentPlayedCardId = cardId;
+
+        if (card is UnitCard ucard)
+        {
+            if (ucard.UnitType == UnitType.Healer)
+            {
+                _isModalVisible = true;
+                _modalTitle = "Select a card to revive";
+                _modalCards = _room.GameState.Player.Deck.ReleasedCards.OfType<Card>().ToList();
+                StateHasChanged();
+                return;
+            }
+
+            if (ucard.UnitType == UnitType.Spy)
+            {
+                _isModalVisible = true;
+                _modalTitle = "Select an opponent card to spy";
+                _modalCards = _room.GameState.Opponent.Deck.PlayedCards
+                    .Where(c => c.UnitType != UnitType.Hero)
+                    .OfType<Card>()
+                    .ToList();
+                StateHasChanged();
+                return;
+            }
+        }
+
+        await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+    }
+
+    private async Task SelectTargetCard(string targetCardId)
+    {
+        await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, _currentPlayedCardId, targetCardId);
+
+        CloseModal();
+    }
+
+    private void CloseModal()
+    {
+        _isModalVisible = false;
+        _modalCards.Clear();
+        StateHasChanged();
+    }
+    
+    private void HandleRoundEnded(RoundEndedDto roundEnded)
+    {
+        Console.WriteLine("Round ended");
+        
+        _roundWinner = roundEnded.RoundWinner;
+        _showRoundEndedModal = true;
+
+        _room.GameState = roundEnded.GameState;
+
+        StateHasChanged();
+    }
+
+    private async void HandleGameEnded(GameEndedDto gameEnded)
+    {
+        _gameWinner = gameEnded.GameWinner;
+        _showGameEndedModal = true;
+
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void CloseRoundEndedModal()
+    {
+        _showRoundEndedModal = false;
+        StateHasChanged();
+    }
+
+    private void CloseGameEndedModal()
+    {
+        _showGameEndedModal = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
+
+            await _module.InvokeVoidAsync("setupCardAdjustments");
+        }
+    }
+    
+    private async Task EndRound()
+    {
+        await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, null, null);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("cleanupCardAdjustments");
+            await _module.DisposeAsync();
+        }
+    }
+}
