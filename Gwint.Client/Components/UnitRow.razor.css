@@ -16,6 +16,7 @@
 }
 
 .unit-card {
+    position: relative;
     min-width: 60px;
     height: 100%;
     aspect-ratio: 2 / 3;
@@ -39,4 +40,15 @@
 .unit-card:hover {
     transform: scale(1.1) translateY(-3px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8);
+}
+
+.strength-indicator {
+    position: absolute;
+    top: -13px;
+    left: -13px;
+    font-size: 16px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
