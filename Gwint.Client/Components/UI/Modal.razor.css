@@ -19,3 +19,9 @@
     max-width: 500px;
     text-align: center;
 }
+
+.card-selection-modal-body {
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}

@@ -76,18 +76,13 @@
         @if (_isModalVisible)
         {
             <Modal
-                Title="@_modalTitle"
-                OnClose="CloseModal">
-                <div class="card-selection">
-                    @foreach (var card in _modalCards)
-                    {
-                    <div class="unit-card-wrapper" @onclick="() => SelectTargetCard(card.Id)">
-                        <div class="unit-card">
-                            <img src="@card.ImageUrl" alt="@card.Name"/>
-                        </div>
-                    </div>
-                    }
-                </div>
+                Title="Select Target Card"
+                OnClose="CloseModal"
+                BodyClass="card-selection-modal-body"
+                Scrollable="true">
+                <UnitRow
+                    Cards="_modalCards"
+                    OnCardSelected="SelectTargetCard"/>
             </Modal>
         }
     </div>
