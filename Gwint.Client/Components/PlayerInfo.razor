@@ -1,0 +1,23 @@
+<div class="player-info">
+    <div class="player-avatar @AvatarClass"></div>
+    <div class="player-details">
+        <div class="details-top">
+            <div class="card-count">@CardsInHand</div>
+            <div class="round-wins">@RoundWins</div>
+        </div>
+        <div class="details-bottom">
+            <div class="player-name">@Name</div>
+            <div class="deck-name">@DeckName</div>
+        </div>
+    </div>
+    <div class="player-score">@TotalScore</div>
+</div>
+
+@code {
+    [Parameter] public string Name { get; set; } = string.Empty;
+    [Parameter] public string DeckName { get; set; } = string.Empty;
+    [Parameter] public int? CardsInHand { get; set; }
+    [Parameter] public int RoundWins { get; set; }
+    [Parameter] public int TotalScore { get; set; }
+    [Parameter] public string AvatarClass { get; set; } = string.Empty;
+}
