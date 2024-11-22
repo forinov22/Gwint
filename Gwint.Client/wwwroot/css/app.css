@@ -89,12 +89,3 @@ body {
     font-weight: bold;
     color: #d4c19b;
 }
-
-.card-selection {
-    display: flex;
-    justify-content: space-around;
-}
-
-.card-selection > .unit-card-wrapper {
-    height: 300px;
-}
