@@ -1,9 +1,10 @@
 ﻿function setupCardAdjustments() {
-    function adjustCardPositions() {
+    function adjustCardPositions(wrapper) {
         const gameAction = document.querySelector('.game-action');
-        if (!gameAction) return;
+        if (!gameAction) return; // Ensure the target element exists
 
-        const unitRows = gameAction.querySelectorAll('.unit-row');
+        // const unitRows = gameAction.querySelectorAll('.unit-row');
+        const unitRows = document.querySelectorAll(wrapper);
 
         unitRows.forEach(unitRow => {
             const cards = unitRow.querySelectorAll('.unit-card-wrapper');
@@ -22,20 +23,17 @@
         });
     }
 
-    adjustCardPositions();
+    adjustCardPositions('.unit-row');
+    adjustCardPositions('.card-selection');
     
-    window.addEventListener('resize', adjustCardPositions);
+    window.addEventListener('resize', () => {
+        adjustCardPositions('.unit-row');
+        adjustCardPositions('.card-selection');
+    });
 }
 
 function cleanupCardAdjustments() {
-    window.removeEventListener('resize', adjustCardPositions);
+    // window.removeEventListener('resize', adjustCardPositions);
 }
 
-function scrollElement(element, delta, direction) {
-    delta = direction ? delta : -delta;
-    if (element) {
-        element.scrollLeft += delta;
-    }
-}
-
-export { setupCardAdjustments, cleanupCardAdjustments, scrollElement };
+export { setupCardAdjustments, cleanupCardAdjustments };

@@ -4,8 +4,6 @@
 @using Gwint.Client.Services
 @using Gwint.Contracts
 @using Gwint.Lib
-@using Gwint.Client.Components
-@using Gwint.Client.Components.UI
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -22,13 +20,20 @@
     <div class="game-info">
         @if (_room.GameState.Opponent is not null)
         {
-            <PlayerInfo 
-                Name="@_room.GameState.Opponent.Name"
-                DeckName="@_room.GameState.Opponent.Deck?.DeckType.ToString()"
-                CardsInHand="@_room.GameState.Opponent.Deck?.CardsInHand"
-                RoundWins="@_room.GameState.GameScore.OpponentRoundWins"
-                TotalScore="@_room.GameState.GameScore.OpponentTotalScore"
-                AvatarClass="opponent-avatar"/>
+            <div class="opponent-info player-section">
+                <div class="player-avatar opponent-avatar"></div>
+                <div class="player-details">
+                    <div class="details-top">
+                        <div class="card-count">@_room.GameState.Opponent.Deck?.CardsInHand</div>
+                        <div class="round-wins">@_room.GameState.GameScore.OpponentRoundWins</div>
+                    </div>
+                    <div class="details-bottom">
+                        <div class="player-name">@_room.GameState.Opponent.Name</div>
+                        <div class="deck-name">@_room.GameState.Opponent?.Deck?.DeckType.ToString()</div>
+                    </div>
+                </div>
+                <div class="player-score">@_room.GameState.GameScore.OpponentTotalScore</div>
+            </div>
             @if (_isOpponentAccepted)
             {
                 <div class="opponent-accepted">Opponent accepted</div>
@@ -38,12 +43,20 @@
                 <div class="opponent-selected-deck">Opponent selected deck: @_opponentDeck.ToString()</div>
             }
         }
-        <PlayerInfo
-            Name="@_room.GameState.Player.Name"
-            DeckName="@_room.GameState.Player.Deck?.DeckType.ToString()"
-            CardsInHand="@_room.GameState.Player.Deck?.Hand.Count"
-            RoundWins="@_room.GameState.GameScore.PlayerRoundWins"
-            TotalScore="@_room.GameState.GameScore.PlayerTotalScore"/>
+        <div class="current-player-info player-section">
+            <div class="player-avatar"></div>
+            <div class="player-details">
+                <div class="details-top">
+                    <div class="card-count">@_room.GameState.Player.Deck?.Hand.Count</div>
+                    <div class="round-wins">@_room.GameState.GameScore.PlayerRoundWins</div>
+                </div>
+                <div class="details-bottom">
+                    <div class="player-name">@_room!.GameState.Player.Name</div>
+                    <div class="deck-name">@_room.GameState.Player.Deck?.DeckType.ToString()</div>
+                </div>
+            </div>
+            <div class="player-score">@_room.GameState.GameScore.PlayerTotalScore</div>
+        </div>
         @if (_showAcceptGameForm)
         {
             <div class="accept-game-form">
@@ -52,54 +65,152 @@
         }
         @if (_showSelectDeckForm)
         {
-            <DeckSelectionForm 
-                DeckTypes="new [] { DeckType.Nilfgaardian, DeckType.Northern }"
-                OnDeckSelected="SelectDeck"/>
+            <div class="select-deck-form">
+                <select @bind="_selectedDeckType" class="deck-selection">
+                    <option value="@DeckType.Northern" class="deck-option">Northern</option>
+                    <option value="@DeckType.Nilfgaardian" class="deck-option">Nilfgaardian</option>
+                </select>
+                <button @onclick="SelectDeck">Submit</button>
+            </div>
         }
         <div class="end-round">
             <button @onclick="EndRound">End Round</button>
         </div>
     </div>
     <div class="game-action">
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"/>
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"/>
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"/>
-
-        <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"/>
-        <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"/>
-        <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"/>
-        
-        <UnitRow 
-            Cards="_room.GameState.Player.Deck?.Hand"
-            OnCardSelected="MakeMove"/>
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Siege))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Ranged))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Opponent is not null && _room.GameState.Opponent.Deck is not null && _room.GameState.Opponent.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Opponent.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Melee))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Melee))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Ranged))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.PlayedCards is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.PlayedCards.Where(c => c.UnitRange == Lib.UnitRange.Siege))
+                {
+                    <div class="unit-card-wrapper">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="unit-row">
+            @if (_room.GameState.Player is not null && _room.GameState.Player.Deck is not null && _room.GameState.Player.Deck.Hand is not null)
+            {
+                foreach (var card in _room.GameState.Player.Deck.Hand)
+                {
+                    <div class="unit-card-wrapper" @onclick="() => MakeMove(card.Id)">
+                        <div class="unit-card">
+                            <img src="@card.ImageUrl" alt="@card.Name"/>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
 
         @if (_isModalVisible)
         {
-            <Modal
-                Title="Select Target Card"
-                OnClose="CloseModal"
-                BodyClass="card-selection-modal-body"
-                Scrollable="true">
-                <UnitRow
-                    Cards="_modalCards"
-                    OnCardSelected="SelectTargetCard"/>
-            </Modal>
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <h3>@_modalTitle</h3>
+                    <div class="card-selection">
+                        @foreach (var card in _modalCards)
+                        {
+                            <div class="unit-card-wrapper" @onclick="() => SelectTargetCard(card.Id)">
+                                <div class="unit-card">
+                                    <img src="@card.ImageUrl" alt="@card.Name"/>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <button @onclick="CloseModal">Cancel</button>
+                </div>
+            </div>
         }
     </div>
 </div>
 
 @if (_showRoundEndedModal)
 {
-    <Modal Title="Round Ended" OnClose="CloseRoundEndedModal">
-        <p>The winner of this round is: <strong>@_roundWinner</strong></p>
-    </Modal>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3>Round Ended</h3>
+            <p>The winner of this round is: <strong>@_roundWinner</strong></p>
+            <button @onclick="CloseRoundEndedModal">OK</button>
+        </div>
+    </div>
 }
 
 @if (_showGameEndedModal)
 {
-    <Modal Title="Game Ended">
-        <p>The winner of the game is: <strong>@_gameWinner</strong></p>
-    </Modal>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <h3>Game Ended</h3>
+            <p>The winner of the game is: <strong>@_gameWinner</strong></p>
+        </div>
+    </div>
 }
 
 @code {
@@ -203,10 +314,10 @@
         await GameRoomService.AcceptGame(_room.Id, _room.GameState.Player.Id);
     }
 
-    private async Task SelectDeck(DeckType deck)
+    private async Task SelectDeck()
     {
         _showSelectDeckForm = false;
-        await GameRoomService.SelectDeck(_room.Id, _room.GameState.Player.Id, deck);
+        await GameRoomService.SelectDeck(_room.Id, _room.GameState.Player.Id, _selectedDeckType);
     }
 
     private async Task MakeMove(string? cardId)
