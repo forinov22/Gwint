@@ -27,6 +27,54 @@ body {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
 }
 
+.player-section {
+    position: relative;
+    background: #3b3a47;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.player-avatar {
+    background: url('./../king_player.png') center center/cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #876445;
+}
+
+.player-avatar.opponent-avatar {
+    background: url('./../king_opponent.png') center center/cover;
+}
+
+.player-details {
+    flex-grow: 1;
+    color: #d4c19b;
+}
+
+.details-top, .details-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.round-wins, .card-count {
+    color: #f0e6d2;
+}
+
+.player-name, .deck-name {
+    font-weight: bold;
+}
+
+.player-score {
+    font-size: 1.2em;
+    color: #e0e0e0;
+    position: absolute;
+    right: 5px;
+    top: 10px;
+}
+
 .game-action {
     position: relative;
     flex-grow: 1;
@@ -38,7 +86,50 @@ body {
     padding: 10px;
 }
 
-.accept-game-form {
+.unit-row {
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.unit-card-wrapper {
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 100%;
+}
+
+.unit-card {
+    min-width: 60px;
+    height: 100%;
+    aspect-ratio: 2 / 3;
+    border: 1px solid #875f3e;
+    border-radius: 5px;
+    background: linear-gradient(145deg, #3a3a4e, #2b2b38);
+    color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.unit-card > img {
+    height: 100%;
+    width: 100%;
+}
+
+.unit-card:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8);
+}
+
+.accept-game-form, .select-deck-form {
     background: rgba(43, 42, 51, 0.9);
     color: #e0e0e0;
     padding: 10px;
@@ -47,7 +138,7 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
-.accept-game-form button {
+.accept-game-form button, .select-deck-form button {
     background-color: #4a403a;
     color: #e0e0e0;
     padding: 8px 16px;
@@ -59,7 +150,7 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.accept-game-form button:hover {
+.accept-game-form button:hover, .select-deck-form button:hover {
     background-color: #876445;
 }
 
@@ -88,4 +179,35 @@ body {
 .opponent-accepted, .opponent-selected-deck {
     font-weight: bold;
     color: #d4c19b;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #3b3a47;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.card-selection {
+    display: flex;
+    justify-content: space-around;
+}
+
+.card-selection > .unit-card-wrapper {
+    height: 300px;
 }
