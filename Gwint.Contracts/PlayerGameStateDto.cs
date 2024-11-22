@@ -12,19 +12,21 @@ namespace Gwint.Api.DTOs
         public GameScoreDto GameScore { get; set; }
         public GameStatus GameStatus { get; set; }
         public bool IsPlayerTurn { get; set; }
+        public Card? LastPlayedCard { get; set; }
 
         public PlayerGameStateDto(
             PlayerDto player,
             OpponentDto opponent,
             GameScoreDto gameScore,
             GameStatus gameStatus,
-            bool isPlayerTurn)
+            bool isPlayerTurn, Card? lastPlayedCard)
         {
             Player = player;
             Opponent = opponent;
             GameScore = gameScore;
             GameStatus = gameStatus;
             IsPlayerTurn = isPlayerTurn;
+            LastPlayedCard = lastPlayedCard;
         }
     }
 }

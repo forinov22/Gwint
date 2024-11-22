@@ -54,7 +54,7 @@
     {
         if (firstRender)
         {
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/TargetCardSelectionModal.razor.js");
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
         }
     }
 

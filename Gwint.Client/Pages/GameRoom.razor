@@ -18,6 +18,27 @@
     return;
 }
 
+<div class="last-played-card-overlay" style="display: @(ShowLastPlayedCard ? "flex" : "none")">
+    <div class="last-played-card-content">
+        @if (LastPlayedCard is not null)
+        {
+        <div>
+            <h3>@(_room.GameState.IsPlayerTurn ? _room.GameState.Opponent.Name : _room.GameState.Player.Name)</h3>
+            <div class="last-played-card">
+                <img src="@LastPlayedCard.ImageUrl" alt="@LastPlayedCard.Name" />
+            </div>
+        </div>
+        }
+        else
+        {
+        <div>
+            <h3>@(_room.GameState.IsPlayerTurn ? _room.GameState.Opponent.Name : _room.GameState.Player.Name)</h3>
+            <p>Skipped their turn</p>
+        </div>
+        }
+    </div>
+</div>
+
 <div class="game-area">
     <div class="game-info">
         @if (_room.GameState.Opponent is not null)
@@ -120,6 +141,13 @@
     private bool _showGameEndedModal;
     private string? _roundWinner;
     private string? _gameWinner;
+    
+    private bool ShowLastPlayedCard;
+    private Card? LastPlayedCard;
+    private string LastPlayedBy = string.Empty;
+
+    private bool _isOpponentSkipped;
+    private bool _isPlayerSkipped;
 
     private IJSObjectReference _module = null!;
     
@@ -139,7 +167,7 @@
         GameRoomService.OnOpponentJoined += opponent =>
         {
             _showAcceptGameForm = true;
-            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn));
+            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn, null));
             StateHasChanged();
         };
 
@@ -173,9 +201,37 @@
         GameRoomService.OnPlayerMoved += state =>
         {
             _room.GameState = state;
+
+            LastPlayedBy = state.IsPlayerTurn ? _room.GameState.Player.Name : _room.GameState.Opponent?.Name ?? "Opponent";
+            LastPlayedCard = state.LastPlayedCard;
+
+            if (LastPlayedCard is null)
+            {
+                if (state.IsPlayerTurn)
+                {
+                    _isOpponentSkipped = true;
+                }
+                else if (_room.GameState.Opponent is not null)
+                {
+                    _isPlayerSkipped = true;
+                }
+            }
+            
+            ShowLastPlayedCard = true;
             StateHasChanged();
 
-            if (_room.GameState.IsPlayerTurn && _room.GameState.Player.Deck.Hand.Count == 0)
+            Console.WriteLine("here");
+            
+            Thread.Sleep(3000);
+            
+            
+            Console.WriteLine("not here");
+
+            ShowLastPlayedCard = false;
+            LastPlayedCard = null;
+            StateHasChanged();
+            
+            if (_room.GameState.IsPlayerTurn && _room.GameState.Player.Deck.Hand.Count == 0 || _room.GameState.IsPlayerTurn && _isPlayerSkipped)
             {
                 MakeMove(null).GetAwaiter();
             }

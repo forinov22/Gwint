@@ -45,3 +45,9 @@
     right: 5px;
     top: 10px;
 }
+
+.skipped-turn-label {
+    color: #ff4444;
+    font-weight: bold;
+    margin-top: 5px;
+}

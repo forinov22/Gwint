@@ -44,6 +44,19 @@
             }
         }
 
+        public Card? LastPlayedCard
+        {
+            get
+            {
+                if (GameState is not GameRunningState)
+                {
+                    return null;
+                }
+                
+                return GameState.LastPlayedCard;
+            }
+        }
+
         public GameStatus GameStatus => GameState.GameStatus;
 
         public GameScore GameScore

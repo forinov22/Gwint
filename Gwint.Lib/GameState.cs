@@ -21,6 +21,7 @@ namespace Gwint.Lib
         Player Host { get; }
         Player Opponent { get; }
         Player CurrentPlayerTurn { get; }
+        Card? LastPlayedCard { get; }
 
         GameStatus GameStatus => GameStatus.Setup;
         GameScore GameScore { get; }
@@ -35,6 +36,7 @@ namespace Gwint.Lib
         public Player Host { get; } = new(hostName);
         public Player Opponent => throw new NotImplementedException();
         public Player CurrentPlayerTurn => throw new NotImplementedException();
+        public Card? LastPlayedCard => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -62,6 +64,7 @@ namespace Gwint.Lib
         public Player Host { get; } = host;
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn => throw new NotImplementedException();
+        public Card? LastPlayedCard => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -102,6 +105,7 @@ namespace Gwint.Lib
         public Player Host { get; } = host;
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn => throw new NotImplementedException();
+        public Card? LastPlayedCard => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -144,6 +148,7 @@ namespace Gwint.Lib
         public Player Host { get; } = host;
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn { get; private set; } = host;
+        public Card? LastPlayedCard { get; private set; }
 
         public GameStatus GameStatus { get; private set; } = GameStatus.InProcess;
         public GameScore GameScore { get; private set; }
@@ -166,12 +171,14 @@ namespace Gwint.Lib
 
             if (IsTurnSkipped())
             {
+                LastPlayedCard = null;
                 SwitchPlayerTurn();
                 return null;
             }
 
             if (cardId is null)
             {
+                LastPlayedCard = null;
                 HandleSkipTurn(playerId);
                 SwitchPlayerTurn();
                 return (_hostSkipped && _opponentSkipped) ? EndRound() : null;
@@ -180,6 +187,8 @@ namespace Gwint.Lib
             Card card = CurrentPlayerTurn.PlayCard(cardId) 
                         ?? throw new ArgumentException($"User does not have card with id: {cardId} in their hand");
 
+            LastPlayedCard = card;
+            
             switch (card)
             {
                 case UnitCard unitCard:

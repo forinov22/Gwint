@@ -11,6 +11,10 @@
         </div>
     </div>
     <div class="player-score">@TotalScore</div>
+    @if (SkippedTurn)
+    {
+        <p class="skipped-turn-label">Skipped Turn</p>
+    }
 </div>
 
 @code {
@@ -20,4 +24,5 @@
     [Parameter] public int RoundWins { get; set; }
     [Parameter] public int TotalScore { get; set; }
     [Parameter] public string AvatarClass { get; set; } = string.Empty;
+    [Parameter] public bool SkippedTurn { get; set; }
 }
