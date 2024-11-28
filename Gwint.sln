@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Api", "Gwint.Api\Gwin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Contracts", "Gwint.Contracts\Gwint.Contracts.csproj", "{1BC231C2-138C-4465-AE9C-4EE4B3BDC059}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gwint.Client", "Gwint.Client\Gwint.Client.csproj", "{AF50090F-A553-4620-8AA6-BBF132E919FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gwint.Client", "Gwint.Client\Gwint.Client.csproj", "{AF50090F-A553-4620-8AA6-BBF132E919FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

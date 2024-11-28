@@ -1,0 +1,96 @@
+@inject IJSRuntime JSRuntime
+@using Gwint.Lib
+<div class="weather-card-wrapper">
+    @if (Cards.Any())
+    {
+        <div class="weather-cards-container">
+            @foreach (var card in Cards)
+            {
+                <div class="weather-card"
+                     style="@GetCardStyle(card, Cards.IndexOf(card))"
+                     @onclick="() => OnCardSelected.InvokeAsync(card.Id)">
+                    <img src="@card.ImageUrl" alt="@card.Name" class="weather-card-image" />
+                    <div class="weather-card-info">
+                        <div class="weather-card-name">@card.Name</div>
+                        @if (Title)
+                        {
+                            <div class="weather-card-description">@GetCardDescription(card)</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="weather-card-placeholder">
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<WeatherCard> Cards { get; set; } = new();
+    [Parameter] public EventCallback<string> OnCardSelected { get; set; }
+    [Parameter] public bool Title { get; set; } = false;
+
+    private string ParallaxStyle { get; set; } = "transform: rotateX(0deg) rotateY(0deg) scale(1);";
+    private ElementReference _wrapperRef;
+
+    private double _centerX;
+    private double _centerY;
+
+    private async Task HandleMouseMove(MouseEventArgs e)
+    {
+        if (_centerX == 0 && _centerY == 0)
+        {
+            var rect = await JSRuntime.InvokeAsync<DOMRectResult>("getBoundingClientRect", _wrapperRef);
+            _centerX = rect.Left + rect.Width / 2;
+            _centerY = rect.Top + rect.Height / 2;
+        }
+        const double intensity = 15.0;
+
+        double deltaX = e.ClientX - _centerX;
+        double deltaY = e.ClientY - _centerY;
+
+        double rotateX = -(deltaY) / intensity; 
+        double rotateY = deltaX / intensity;
+
+        ParallaxStyle = $"transform: rotateX({rotateX}deg) rotateY({rotateY}deg) scale(1.05); transition: transform 0.2s ease-out;";
+    }
+
+    private void ResetParallax()
+    {
+        ParallaxStyle = "transform: rotateX(0deg) rotateY(0deg) scale(1); transition: transform 0.4s ease-in-out;";
+    }
+
+    private string GetCardStyle(WeatherCard card, int index)
+    {
+        double scale = 1.0 - index * 0.1;
+        double translateY = index * 10; 
+        return $"{GetWeatherStyle(card)} transform: scale({scale}) translateY({translateY}px); transition: all 0.3s ease;";
+    }
+
+    private string GetWeatherStyle(WeatherCard card)
+    {
+        return card.WeatherType switch
+        {
+            WeatherType.Frost => "background-color: lightblue; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);",
+            WeatherType.Fog => "background-color: gray; box-shadow: 0 0 15px rgba(169, 169, 169, 0.7);",
+            WeatherType.Rain => "background-color: lightgray; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);",
+            WeatherType.Clear => "background-color: lightyellow; box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);",
+            _ => "background-color: white; box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);"
+        };
+    }
+
+    private string GetCardDescription(WeatherCard card)
+    {
+        return card.WeatherType switch
+        {
+            WeatherType.Frost => "Sets the strength of all Close Combat cards to 1 for both players.",
+            WeatherType.Fog => "Sets the strength of all Ranged Combat cards to 1 for both players.",
+            WeatherType.Rain => "Sets the strength of all Siege Combat cards to 1 for both players.",
+            WeatherType.Clear => "Removes all Weather Card (Frost, Fog and Rain) effects.",
+            _ => "Unknown"
+        };
+    }
+}

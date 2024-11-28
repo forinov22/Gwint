@@ -1,37 +1,147 @@
 @using Gwint.Lib
-<div class="unit-row">
+@inject IJSRuntime JS
+<div class="@(OpponentHandDeck ? "opponent-deck" : "unit-row")" id="@(OpponentHandDeck ? "" : @RowId)">
     @if (Cards is not null && Cards.Any())
     {
         foreach (var card in Cards)
         {
-            <div class="unit-card-wrapper" @onclick="() => OnCardSelected.InvokeAsync(card.Id)">
-                <div class="unit-card">
-                    <img src="@card.ImageUrl" alt="@card.Name" />
-                    <div class="strength-indicator">
-                        @if (card is UnitCard unitCard)
-                        {
-                            @if (unitCard.CurrentStrength < unitCard.InitialStrength)
+            <div class="unit-card-wrapper"
+                 draggable="true"
+                 id="card-@card.Id">
+                <div class="unit-card @(OwnHandDeck ? "hand own" : "") @(OpponentHandDeck ? "hand opponent" : "")">
+                    @if (OpponentHandDeck)
+                    {
+                        <img src="/card-images/back.png" alt="Opponent Card" class="card-back" />
+                    }
+                    else if(OwnHandDeck)
+                    {
+
+                        <img src="@card.ImageUrl" alt="@card.Name" />
+                    }
+                    else
+                    {
+                        <div class="front">
+                            <img src="@card.ImageUrl" alt="@card.Name" />
+                        </div>
+                        <div class="back" @onclick="() => SelectCard(card)">
+                            @if (card is UnitCard unitCard)
                             {
-                                <span>
-                                    <svg width="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#e61924" d="M246.6 470.6c-12.5 12.5-32.8 12.5-45.3 0l-160-160c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L224 402.7 361.4 265.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-160 160zm160-352l-160 160c-12.5 12.5-32.8 12.5-45.3 0l-160-160c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L224 210.7 361.4 73.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3z"/></svg>
-                                </span>
+                                <div class="strength-indicator">
+                                    @if (unitCard.CurrentStrength < unitCard.InitialStrength)
+                                    {
+                                        <span>
+                                            <img src="/card-images/debuff.png" class="buff-debuff-icon" alt="Debuff" />
+                                        </span>
+                                    }
+                                    else if (unitCard.CurrentStrength > unitCard.InitialStrength)
+                                    {
+                                        <span>
+                                            <img src="/card-images/buff.png" class="buff-debuff-icon" alt="Buff" />
+                                        </span>
+                                    }
+                                </div>
                             }
-                            else if (unitCard.CurrentStrength > unitCard.InitialStrength)
-                            {
-                                <span>
-                                    <svg width="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#63E6BE" d="M246.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L224 109.3 361.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160zm160 352l-160-160c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L224 301.3 361.4 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3z"/></svg>
-                                </span>
-                                
-                            }
-                        }
-                    </div>
+                            <img src="@card.ImageUrl" alt="@card.Name" />
+
+                        </div>
+                    }
                 </div>
+                
             </div>
         }
     }
 </div>
+<script>
+    $(document).ready(function () {
+        $('.unit-card').click(function () {
+            $(this).toggleClass('flipped');
+            $('.shadow').toggleClass('bigger');
+        });
+    });
+    {
+        const own_cards = document.querySelectorAll('.own');
+        console.log(own_cards)
+        const totalCards = own_cards.length;
+        const minRotate = -40;
+        const maxRotate = 40;
+
+        own_cards.forEach((card, index) => {
+            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+
+            card.style.transform = `rotateX(50deg) rotate(${angle}deg)`;
+        });
+    }
+    {
+        const opponent_cards = document.querySelectorAll('.opponent');
+
+        const totalCards = opponent_cards.length;
+        const minRotate = 200;
+        const maxRotate = 120;
+
+        opponent_cards.forEach((card, index) => {
+            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+
+            card.style.transform = `rotateX(40deg) rotate(${angle}deg)`;
+        });
+    }
+</script>
 
 @code {
     [Parameter] public IEnumerable<Card>? Cards { get; set; } = [];
     [Parameter] public EventCallback<string> OnCardSelected { get; set; }
+    [Parameter] public string RowId { get; set; }
+    [Parameter] public bool OpponentHandDeck { get; set; } = false;
+    [Parameter] public bool OwnHandDeck { get; set; } = false;
+    private ElementReference _wrapperRef;
+    private string CardStyle = "position: absolute; top: 0px; left: 0px;";
+    private bool IsDragging = false;
+    private Card? selectedCard;
+
+
+    private void StartDrag(MouseEventArgs e)
+    {
+        IsDragging = true;
+    }
+
+    private void StopDrag(MouseEventArgs e)
+    {
+        IsDragging = false;
+
+        if (IsDroppedOnField(e))
+        {
+            OnCardSelected.InvokeAsync(selectedCard.Id); 
+        }
+    }
+
+    private void OnMouseMove(MouseEventArgs e)
+    {
+        if (IsDragging)
+        {
+            CardStyle = $"position: absolute; top: {e.ClientY}px; left: {e.ClientX}px;";
+            StateHasChanged();
+        }
+    }
+
+    private bool IsDroppedOnField(MouseEventArgs e)
+    {
+        return e.ClientY > 100;
+    }
+    private void SelectCard(Card card)
+    {
+        selectedCard = card;
+        OnCardSelected.InvokeAsync(card.Id);
+    }
+
+    private void DeselectCard()
+    {
+        selectedCard = null;
+        StateHasChanged();
+    }
+
+    private string GetCardDescription(Card card)
+    {
+        return card is UnitCard unitCard
+            ? $"Strentgh: {unitCard.CurrentStrength}, Initital strength: {unitCard.InitialStrength}"
+            : "...";
+    }
 }

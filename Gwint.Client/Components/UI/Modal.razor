@@ -1,8 +1,11 @@
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
+
 <div class="modal-overlay">
     <div class="modal-content">
+        @if (!CardModal)
+        {
         <h3>@Title</h3>
         @if (Scrollable)
         {
@@ -15,21 +18,27 @@
             <div class="modal-body @BodyClass">
                 @ChildContent
             </div>
+            }
+        }
+        else
+        {
+            @ChildContent
         }
         <button @onclick="CloseModal">Close</button>
     </div>
-</div>
+    </div>
 
 @code {
     private IJSObjectReference? _module;
-    
+
     [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     [Parameter] public string BodyClass { get; set; } = string.Empty;
     [Parameter] public bool Scrollable { get; set; }
-    
+    [Parameter] public bool CardModal { get; set; } = false;
+
     private async Task CloseModal()
     {
         if (OnClose.HasDelegate)

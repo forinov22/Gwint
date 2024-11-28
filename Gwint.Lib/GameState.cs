@@ -186,12 +186,13 @@ namespace Gwint.Lib
 
             Card card = CurrentPlayerTurn.PlayCard(cardId) 
                         ?? throw new ArgumentException($"User does not have card with id: {cardId} in their hand");
-
+           
             LastPlayedCard = card;
             
             switch (card)
             {
                 case UnitCard unitCard:
+                    unitCard.CurrentStrength -= 1;
                     HandleUnitCard(unitCard, targetCardId);
                     break;
                 case WeatherCard weatherCard:
