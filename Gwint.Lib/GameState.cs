@@ -22,6 +22,7 @@ namespace Gwint.Lib
         Player Opponent { get; }
         Player CurrentPlayerTurn { get; }
         Card? LastPlayedCard { get; }
+        public IEnumerable<WeatherCard> WeatherCards { get; }
 
         GameStatus GameStatus => GameStatus.Setup;
         GameScore GameScore { get; }
@@ -37,6 +38,7 @@ namespace Gwint.Lib
         public Player Opponent => throw new NotImplementedException();
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
+        public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -65,6 +67,7 @@ namespace Gwint.Lib
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
+        public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -106,6 +109,7 @@ namespace Gwint.Lib
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
+        public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -144,11 +148,13 @@ namespace Gwint.Lib
     {
         private bool _hostSkipped;
         private bool _opponentSkipped;
+        private List<WeatherCard> _weatherCards = [];
 
         public Player Host { get; } = host;
         public Player Opponent { get; } = opponent;
         public Player CurrentPlayerTurn { get; private set; } = host;
         public Card? LastPlayedCard { get; private set; }
+        public IEnumerable<WeatherCard> WeatherCards => _weatherCards.AsReadOnly();
 
         public GameStatus GameStatus { get; private set; } = GameStatus.InProcess;
         public GameScore GameScore { get; private set; }
@@ -201,14 +207,45 @@ namespace Gwint.Lib
                     throw new InvalidOperationException("Unsupported card type.");
             }
 
-            UpdateScores();
+            UpdateCardScores();
+            
+            UpdatePlayerScores();
 
             SwitchPlayerTurn();
 
             return null;
         }
 
-        private void UpdateScores()
+        private void UpdateCardScores()
+        {
+            IEnumerable<UnitCard> AffectedCards(IEnumerable<UnitCard> cards, UnitRange range) =>
+                cards.Where(c => c.UnitRange == range && c.UnitType != UnitType.Hero);
+
+            foreach (var weatherCard in _weatherCards)
+            {
+                switch (weatherCard.WeatherType)
+                {
+                    case WeatherType.Frost:
+                        ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Melee), 1);
+                        ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Melee), 1);
+                        break;
+                    case WeatherType.Fog:
+                        ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Ranged), 1);
+                        ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Ranged), 1);
+                        break;
+                    case WeatherType.Rain:
+                        ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Siege), 1);
+                        ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Siege), 1);
+                        break;
+                    case WeatherType.Clear:
+                        ResetWeatherEffects(CurrentPlayerTurn.Deck.PlayedCards);
+                        ResetWeatherEffects(opponent.Deck.PlayedCards);
+                        break;
+                }
+            }
+        }
+        
+        private void UpdatePlayerScores()
         {
             GameScore = GameScore with
             {
@@ -277,30 +314,16 @@ namespace Gwint.Lib
 
         private void HandleWeatherCard(WeatherCard weatherCard)
         {
-            var opponent = GetOpponent();
-
-            IEnumerable<UnitCard> AffectedCards(IEnumerable<UnitCard> cards, UnitRange range) =>
-                cards.Where(c => c.UnitRange == range && c.UnitType != UnitType.Hero);
-
-            switch (weatherCard.WeatherType)
+            if (weatherCard.WeatherType == WeatherType.Clear)
             {
-                case WeatherType.Frost:
-                    ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Melee), 1);
-                    ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Melee), 1);
-                    break;
-                case WeatherType.Fog:
-                    ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Ranged), 1);
-                    ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Ranged), 1);
-                    break;
-                case WeatherType.Rain:
-                    ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Siege), 1);
-                    ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Siege), 1);
-                    break;
-                case WeatherType.Clear:
-                    ResetWeatherEffects(CurrentPlayerTurn.Deck.PlayedCards);
-                    ResetWeatherEffects(opponent.Deck.PlayedCards);
-                    break;
+                _weatherCards.Clear();
             }
+            else
+            {
+                _weatherCards.RemoveAll(c => c.WeatherType == WeatherType.Clear);
+            }
+
+            _weatherCards.Add(weatherCard);
         }
 
         private void ApplyWeatherEffect(IEnumerable<UnitCard> cards, int strength)

@@ -57,6 +57,19 @@
             }
         }
 
+        public IEnumerable<WeatherCard> WeatherCards
+        {
+            get
+            {
+                if (GameState is not GameRunningState)
+                {
+                    return [];
+                }
+                
+                return GameState.WeatherCards;
+            }
+        }
+
         public GameStatus GameStatus => GameState.GameStatus;
 
         public GameScore GameScore

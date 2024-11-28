@@ -77,7 +77,8 @@ namespace Gwint.Contracts
                     room.GameStatus,
                     room?.CurrentPlayerTurn is not null
                         && room.Host == room.CurrentPlayerTurn,
-                    room.LastPlayedCard
+                    room.LastPlayedCard,
+                    room.WeatherCards
                 )
                 : new PlayerGameStateDto
                 (
@@ -87,7 +88,8 @@ namespace Gwint.Contracts
                     room.GameStatus,
                     room?.CurrentPlayerTurn is not null
                         && room.Opponent == room.CurrentPlayerTurn,
-                    room.LastPlayedCard
+                    room.LastPlayedCard,
+                    room.WeatherCards
                 );
         }
 
