@@ -1,5 +1,6 @@
 ﻿@page "/game/{roomId}"
 
+@using System.Text.Json
 @using Gwint.Api.DTOs
 @using Gwint.Client.Services
 @using Gwint.Contracts
@@ -167,7 +168,7 @@
         GameRoomService.OnOpponentJoined += opponent =>
         {
             _showAcceptGameForm = true;
-            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn, null));
+            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn, null, []));
             StateHasChanged();
         };
 
@@ -200,6 +201,8 @@
 
         GameRoomService.OnPlayerMoved += state =>
         {
+            // Console.WriteLine(JsonSerializer.Serialize(state));
+            
             _room.GameState = state;
 
             LastPlayedBy = state.IsPlayerTurn ? _room.GameState.Player.Name : _room.GameState.Opponent?.Name ?? "Opponent";

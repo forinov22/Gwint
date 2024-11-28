@@ -13,13 +13,16 @@ namespace Gwint.Api.DTOs
         public GameStatus GameStatus { get; set; }
         public bool IsPlayerTurn { get; set; }
         public Card? LastPlayedCard { get; set; }
+        public IEnumerable<WeatherCard> WeatherCards { get; set; } = [];
 
         public PlayerGameStateDto(
             PlayerDto player,
             OpponentDto opponent,
             GameScoreDto gameScore,
             GameStatus gameStatus,
-            bool isPlayerTurn, Card? lastPlayedCard)
+            bool isPlayerTurn, 
+            Card? lastPlayedCard,
+            IEnumerable<WeatherCard> weatherCards)
         {
             Player = player;
             Opponent = opponent;
@@ -27,6 +30,7 @@ namespace Gwint.Api.DTOs
             GameStatus = gameStatus;
             IsPlayerTurn = isPlayerTurn;
             LastPlayedCard = lastPlayedCard;
+            WeatherCards = weatherCards;
         }
     }
 }
