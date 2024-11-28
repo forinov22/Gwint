@@ -22,7 +22,7 @@
 }
 
 function setupCardAdjustments() {
-    
+
 
     adjustCardPositions();
 
@@ -31,6 +31,42 @@ function setupCardAdjustments() {
 
 function cleanupCardAdjustments() {
     window.removeEventListener('resize', adjustCardPositions);
+}
+
+function rotateOwnCards() {
+    const own_cards = document.querySelectorAll('.own');
+    console.log(own_cards);
+    const totalCards = own_cards.length;
+    const minRotate = -40;
+    const maxRotate = 40;
+
+    own_cards.forEach((card, index) => {
+        const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+
+        card.style.transform = `rotateX(50deg) rotate(${angle}deg)`;
+    });
+}
+function rotateOpponentCards() {
+    const opponent_cards = document.querySelectorAll('.opponent');
+    console.log(opponent_cards);
+    const totalCards = opponent_cards.length;
+    const minRotate = 200;
+    const maxRotate = 120;
+
+    opponent_cards.forEach((card, index) => {
+        const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+
+        card.style.transform = `rotateX(40deg) rotate(${angle}deg)`;
+    });
+}
+
+function initializeCardEvents() {
+    $(document).off('click', '.unit-card'); // Удаляем старые обработчики
+    $(document).on('click', '.unit-card', function () {
+        $(this).toggleClass('flipped');
+        $('.shadow').toggleClass('bigger');
+        console.log('toggle')
+    });
 }
 
 function scrollElement(element, delta, direction) {
@@ -160,11 +196,6 @@ const onDrop = (event) => {
         }
     }
 };
-$('.unit-card').click(function () {
-    $(this).toggleClass('flipped');
-    $('.shadow').toggleClass('bigger');
-    console.log('aboba')
-});
 
 
-export { setupCardAdjustments, cleanupCardAdjustments, scrollElement, initializeDragAndDrop, onDrop };
+export { setupCardAdjustments, cleanupCardAdjustments, scrollElement, initializeDragAndDrop, onDrop, rotateOpponentCards, rotateOwnCards, initializeCardEvents };

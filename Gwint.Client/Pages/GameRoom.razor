@@ -92,9 +92,6 @@
         <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"/>
         <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"/>
 
-        @* <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"/>
-        <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"/>
-        <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"/> *@
         
 
             <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"
@@ -120,6 +117,14 @@
                 <UnitRow
                     Cards="_modalCards"
                     OnCardSelected="SelectTargetCard"/>
+            </Modal>
+        }
+
+        @if (_isErrorModalVisible)
+        {
+            <Modal Title="You can't do this move now!"
+                   OnClose="@(() => {_isErrorModalVisible = false;})"
+                   BodyClass="card-selection-modal-body">
             </Modal>
         }
 
@@ -175,6 +180,8 @@
     private string? _roundWinner;
     private string? _gameWinner;
 
+    private bool _isErrorModalVisible = false;
+
     private bool ShowLastPlayedCard;
     private Card? LastPlayedCard;
     private string LastPlayedBy = string.Empty;
@@ -183,6 +190,7 @@
     private bool _isPlayerSkipped;
 
     private IJSObjectReference _module = null!;
+
 
     private GameRoomDto _room = null!;
 
@@ -360,7 +368,6 @@
                     StateHasChanged();
                     return;
                 }
-                // ucard.CurrentStrength -= 1;
             }
             else if (card is WeatherCard wcard)
             {
@@ -377,8 +384,7 @@
             {
                 weatherCards.Remove(wcard);
             }
-            _isModalVisible = true;
-            _modalTitle = "You can't make this move now.";
+            _isErrorModalVisible = true;
         }
         finally
         {
@@ -419,11 +425,11 @@
         _isWeatherModalVisible = false;
         StateHasChanged();
     }
-    
+
     private void HandleRoundEnded(RoundEndedDto roundEnded)
     {
         Console.WriteLine("Round ended");
-        
+
         _roundWinner = roundEnded.RoundWinner;
         _showRoundEndedModal = true;
 

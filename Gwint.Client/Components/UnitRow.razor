@@ -8,14 +8,13 @@
             <div class="unit-card-wrapper"
                  draggable="true"
                  id="card-@card.Id">
-                <div class="unit-card @(OwnHandDeck ? "hand own" : "") @(OpponentHandDeck ? "hand opponent" : "")">
+                <div class="unit-card @(OwnHandDeck ? "hand own" : "") @(OpponentHandDeck ? "hand opponent" : "")" @onclick="() => SelectCard(card)">
                     @if (OpponentHandDeck)
                     {
                         <img src="/card-images/back.png" alt="Opponent Card" class="card-back" />
                     }
-                    else if(OwnHandDeck)
+                    else if (OwnHandDeck)
                     {
-
                         <img src="@card.ImageUrl" alt="@card.Name" />
                     }
                     else
@@ -23,7 +22,7 @@
                         <div class="front">
                             <img src="@card.ImageUrl" alt="@card.Name" />
                         </div>
-                        <div class="back" @onclick="() => SelectCard(card)">
+                        <div class="back">
                             @if (card is UnitCard unitCard)
                             {
                                 <div class="strength-indicator">
@@ -42,6 +41,13 @@
                                 </div>
                             }
                             <img src="@card.ImageUrl" alt="@card.Name" />
+
+                        </div>
+                    }
+                    @if (!OpponentHandDeck)
+                    {
+                        <div class="card-name">
+                            @card.Name
                         </div>
                     }
                 </div>
@@ -51,38 +57,7 @@
     }
 </div>
 <script>
-    $(document).ready(function () {
-        $('.unit-card').click(function () {
-            $(this).toggleClass('flipped');
-            $('.shadow').toggleClass('bigger');
-        });
-    });
-    {
-        const own_cards = document.querySelectorAll('.own');
-        console.log(own_cards)
-        const totalCards = own_cards.length;
-        const minRotate = -40;
-        const maxRotate = 40;
-
-        own_cards.forEach((card, index) => {
-            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
-
-            card.style.transform = `rotateX(50deg) rotate(${angle}deg)`;
-        });
-    }
-    {
-        const opponent_cards = document.querySelectorAll('.opponent');
-
-        const totalCards = opponent_cards.length;
-        const minRotate = 200;
-        const maxRotate = 120;
-
-        opponent_cards.forEach((card, index) => {
-            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
-
-            card.style.transform = `rotateX(40deg) rotate(${angle}deg)`;
-        });
-    }
+    
 </script>
 
 @code {
@@ -95,7 +70,37 @@
     private string CardStyle = "position: absolute; top: 0px; left: 0px;";
     private bool IsDragging = false;
     private Card? selectedCard;
+    private IJSObjectReference _module;
 
+    protected override async Task OnParametersSetAsync()
+    {
+        int currentCardCount = Cards?.Count() ?? 0;
+
+
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("rotateOwnCards");
+            await _module.InvokeVoidAsync("rotateOpponentCards");
+            await _module.InvokeVoidAsync("initializeCardEvents");
+        }
+        
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
+            
+            
+            // await InitializeDragAndDrop();
+        }
+        if(_module != null){
+            await _module.InvokeVoidAsync("rotateOwnCards");
+            await _module.InvokeVoidAsync("rotateOpponentCards");
+        }
+    }
 
     private void StartDrag(MouseEventArgs e)
     {

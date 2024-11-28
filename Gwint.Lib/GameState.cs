@@ -192,7 +192,6 @@ namespace Gwint.Lib
             switch (card)
             {
                 case UnitCard unitCard:
-                    unitCard.CurrentStrength -= 1;
                     HandleUnitCard(unitCard, targetCardId);
                     break;
                 case WeatherCard weatherCard:
