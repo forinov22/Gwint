@@ -1,35 +1,20 @@
 @inject IJSRuntime JSRuntime
 @using Gwint.Lib
-<div class="weather-card-wrapper">
-    @if (Cards.Any())
-    {
-        <div class="weather-cards-container">
-            @foreach (var card in Cards)
-            {
-                <div class="weather-card"
-                     style="@GetCardStyle(card, Cards.IndexOf(card))"
-                     @onclick="() => OnCardSelected.InvokeAsync(card.Id)">
-                    <img src="@card.ImageUrl" alt="@card.Name" class="weather-card-image" />
-                    <div class="weather-card-info">
-                        <div class="weather-card-name">@card.Name</div>
-                        @if (Title)
-                        {
-                            <div class="weather-card-description">@GetCardDescription(card)</div>
-                        }
-                    </div>
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="weather-card-placeholder">
-        </div>
-    }
+<div class="weather-card field"
+     style="@GetWeatherStyle(Card)"
+     @onclick="() => OnCardSelected.InvokeAsync(Card.Id)">
+    <img src="@Card.ImageUrl" alt="@Card.Name" class="weather-card-image" />
+    @* <div class="weather-card-info">
+        <div class="weather-card-name">@card.Name</div>
+        @if (Title)
+        {
+            <div class="weather-card-description">@GetCardDescription(card)</div>
+        }
+    </div> *@
 </div>
 
 @code {
-    [Parameter] public List<WeatherCard> Cards { get; set; } = new();
+    [Parameter] public WeatherCard Card { get; set; }
     [Parameter] public EventCallback<string> OnCardSelected { get; set; }
     [Parameter] public bool Title { get; set; } = false;
 
@@ -65,10 +50,11 @@
 
     private string GetCardStyle(WeatherCard card, int index)
     {
-        double scale = 1.0 - index * 0.1;
-        double translateY = index * 10; 
-        return $"{GetWeatherStyle(card)} transform: scale({scale}) translateY({translateY}px); transition: all 0.3s ease;";
+        double scale = 1.0 - index * 0.05;
+        double translateY = index * 20; 
+        return $"{GetWeatherStyle(card)} transform: scale({scale}) translateY({translateY}px); --order: {index};";
     }
+
 
     private string GetWeatherStyle(WeatherCard card)
     {
@@ -76,7 +62,7 @@
         {
             WeatherType.Frost => "background-color: lightblue; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);",
             WeatherType.Fog => "background-color: gray; box-shadow: 0 0 15px rgba(169, 169, 169, 0.7);",
-            WeatherType.Rain => "background-color: lightgray; box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);",
+            WeatherType.Rain => "background-color: lightgray; box-shadow: 0 0 15px rgb(231 216 216 / 70%);",
             WeatherType.Clear => "background-color: lightyellow; box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);",
             _ => "background-color: white; box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);"
         };

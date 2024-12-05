@@ -23,7 +23,7 @@ namespace Gwint.Contracts
                     OpponentRoundWins = gameScore.HostRoundWins
                 };
         }
-        
+
         public static PlayerDeckDto ToPlayerDeckDto(this Deck playerDeck)
         {
             return new PlayerDeckDto
@@ -78,7 +78,8 @@ namespace Gwint.Contracts
                     room?.CurrentPlayerTurn is not null
                         && room.Host == room.CurrentPlayerTurn,
                     room.LastPlayedCard,
-                    room.WeatherCards
+                    room.WeatherCards,
+                    room.WeatherRowsAffected
                 )
                 : new PlayerGameStateDto
                 (
@@ -89,7 +90,8 @@ namespace Gwint.Contracts
                     room?.CurrentPlayerTurn is not null
                         && room.Opponent == room.CurrentPlayerTurn,
                     room.LastPlayedCard,
-                    room.WeatherCards
+                    room.WeatherCards,
+                    room.WeatherRowsAffected
                 );
         }
 

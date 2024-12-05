@@ -35,39 +35,100 @@ function cleanupCardAdjustments() {
 
 function rotateOwnCards() {
     const own_cards = document.querySelectorAll('.own');
-    console.log(own_cards);
     const totalCards = own_cards.length;
-    const minRotate = -40;
-    const maxRotate = 40;
+    if (totalCards != 1) {
+        const minRotate = -40;
+        const maxRotate = 40;
 
-    own_cards.forEach((card, index) => {
-        const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+        own_cards.forEach((card, index) => {
+            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
 
-        card.style.transform = `rotateX(50deg) rotate(${angle}deg)`;
-    });
+            card.style.transform = `rotateX(15deg) rotate(${angle}deg)`;
+        });
+    }
+    else {
+        own_cards[0].style.transform = 'rotateX(15deg) rotate(0)';
+    }
 }
 function rotateOpponentCards() {
     const opponent_cards = document.querySelectorAll('.opponent');
-    console.log(opponent_cards);
     const totalCards = opponent_cards.length;
-    const minRotate = 200;
-    const maxRotate = 120;
+    if (totalCards != 1) {
+        const minRotate = 220;
+        const maxRotate = 140;
 
-    opponent_cards.forEach((card, index) => {
-        const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
+        opponent_cards.forEach((card, index) => {
+            const angle = minRotate + (maxRotate - minRotate) * (index / (totalCards - 1));
 
-        card.style.transform = `rotateX(40deg) rotate(${angle}deg)`;
-    });
+            card.style.transform = `rotateX(40deg) rotate(${angle}deg)`;
+        });
+    }
+    else {
+        opponent_cards[0].style.transform = 'rotateX(40deg) rotate(180deg)';
+    }
 }
+
+var timeout = null;
 
 function initializeCardEvents() {
-    $(document).off('click', '.unit-card'); // Удаляем старые обработчики
-    $(document).on('click', '.unit-card', function () {
+    $(document).off('click', '.field');
+    $(document).off('click', '.own');
+    $(document).on('click', '.own', function () {
         $(this).toggleClass('flipped');
-        $('.shadow').toggleClass('bigger');
-        console.log('toggle')
+    });
+    $(document).on('click', '.field', function () {
+        $(this).toggleClass('flipped');
     });
 }
+
+function allowDrop(event) {
+    event.preventDefault();
+}
+
+let offsetX = 0;
+let offsetY = 0;
+let card = null;
+
+function dragStart(e, cardId) {
+    card = document.getElementById('card-' + cardId);
+
+    const rect = card.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    card.style.height = '140px';
+    //card.style.width = '70px';
+    card.style.margin = '0';
+    card.style.setProperty('top', (e.clientY - offsetY) + 'px', 'important');
+    card.style.setProperty('left', (e.clientX - offsetX) + 'px', 'important');
+    card.style.setProperty('position', 'fixed', 'important');
+}
+
+function drag(e, cardId) {
+    card.style.setProperty('top', (e.clientY - offsetY) + 'px', 'important');
+    card.style.setProperty('left', (e.clientX - offsetX) + 'px', 'important');
+}
+
+function drop(event, gameRoomInstance) {
+    const cardId = (card.id).substring(5);
+    console.log(card.style.top)
+    card.style.height = '';
+    card.style.width = '';
+    card.style.margin = '';
+    card.style.top = ''; 
+    card.style.left = '';
+    card.style.position = '';
+    // Затем вызываем MoveCard
+    gameRoomInstance.invokeMethodAsync('MoveCard', cardId)
+        .then(() => {
+            console.log("Card moved successfully.");
+        })
+        .catch(error => {
+            console.error("Failed to move card:", error);
+        });
+}
+
+
+
 
 function scrollElement(element, delta, direction) {
     delta = direction ? delta : -delta;
@@ -89,6 +150,14 @@ window.getBoundingClientRect = (element) => {
         height: rect.height
     };
 };
+
+function changeFavicon(newIconPath) {
+    var link = document.querySelector("link[rel='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'icon';
+    link.href = newIconPath;
+    document.head.appendChild(link);
+}
 
 function initializeDragAndDrop(cardPrefix, playZoneId, deckZoneId) {
     const playZone = document.getElementById(playZoneId);
@@ -198,4 +267,4 @@ const onDrop = (event) => {
 };
 
 
-export { setupCardAdjustments, cleanupCardAdjustments, scrollElement, initializeDragAndDrop, onDrop, rotateOpponentCards, rotateOwnCards, initializeCardEvents };
+export { setupCardAdjustments, cleanupCardAdjustments, scrollElement, initializeDragAndDrop, onDrop, rotateOpponentCards, rotateOwnCards, initializeCardEvents, changeFavicon, drag, drop, dragStart };

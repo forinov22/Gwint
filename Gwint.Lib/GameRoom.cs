@@ -52,7 +52,7 @@
                 {
                     return null;
                 }
-                
+
                 return GameState.LastPlayedCard;
             }
         }
@@ -65,8 +65,32 @@
                 {
                     return [];
                 }
-                
+
                 return GameState.WeatherCards;
+            }
+        }
+
+        public IList<bool> WeatherRowsAffected
+        {
+            get
+            {
+                if (GameState is not GameRunningState)
+                {
+                    return [];
+                }
+
+                return GameState.WeatherRowsAffected;
+            }
+            set
+            {
+                if (GameState is not GameRunningState)
+                {
+
+                }
+                else
+                {
+                    GameState.WeatherRowsAffected = value;
+                }
             }
         }
 
@@ -114,7 +138,7 @@
             {
                 return playersAcceptingState.AcceptGame(playerId);
             }
-            
+
             throw new InvalidOperationException("Can not accept game in current moment");
         }
 

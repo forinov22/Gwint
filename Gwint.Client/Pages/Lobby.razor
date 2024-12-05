@@ -2,41 +2,44 @@
 @using Gwint.Client.Services
 @using Gwint.Contracts
 @implements IAsyncDisposable
+@inject IJSRuntime JS
 @inject GameRoomService GameRoomService
 @inject NavigationManager Navigation
 
-<h3>Available Game Rooms</h3>
-<ul>
-    @foreach (var room in _rooms)
+<div class="lobby-container">
+    <h3 class="lobby-header">Available Game Rooms</h3>
+    <ul class="room-list">
+        @foreach (var room in _rooms)
+        {
+            <li class="room-item">
+                <span class="room-id">Room ID: @room.Id</span>
+                <button class="btn join-btn" @onclick="() => SelectRoom(room)">Join Room</button>
+            </li>
+        }
+    </ul>
+
+    <div class="create-room-container">
+        <button class="btn create-room-btn" @onclick="ClickCreateRoom">Create Room</button>
+    </div>
+
+    @if (_showCreateRoomForm)
     {
-        <li>
-            @room.Id
-            <button @onclick="() => SelectRoom(room)">Join Room</button>
-        </li>
+        <div class="create-room-form">
+            <h3>Create Room</h3>
+            <input class="input-field" @bind="_userName" placeholder="Enter your name" />
+            <button class="btn submit-btn" @onclick="CreateRoom">Create</button>
+        </div>
     }
-</ul>
 
-<div>
-    <button @onclick="ClickCreateRoom" >Create Room</button>
+    @if (_showJoinRoomForm)
+    {
+        <div class="join-room-form">
+            <h3>Join Room: @_selectedRoom?.Id</h3>
+            <input class="input-field" @bind="_userName" placeholder="Enter your name" />
+            <button class="btn submit-btn" @onclick="JoinSelectedRoom">Join</button>
+        </div>
+    }
 </div>
-
-@if (_showCreateRoomForm)
-{
-    <div>
-        <h3>Create Room</h3>
-        <input @bind="_userName" />
-        <button @onclick="CreateRoom">Join</button>
-    </div>
-}
-
-@if (_showJoinRoomForm)
-{
-    <div>
-        <h3>Join Room: @_selectedRoom?.Id</h3>
-        <input @bind="_userName" />
-        <button @onclick="JoinSelectedRoom">Join</button>
-    </div>
-}
 
 @code {
     private bool _showCreateRoomForm;
@@ -44,9 +47,12 @@
     private string _userName = string.Empty;
     private GameRoomDto? _selectedRoom;
     private List<GameRoomDto> _rooms = [];
+    private IJSObjectReference _module = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
+        await _module.InvokeVoidAsync("changeFavicon", "favicon.ico");
         GameRoomService.OnRoomsUpdated += rooms =>
         {
             _rooms = rooms;

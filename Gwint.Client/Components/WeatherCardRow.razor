@@ -1,0 +1,25 @@
+﻿@inject IJSRuntime JSRuntime
+@using Gwint.Lib
+
+<div class="weather-card-wrapper">
+    @if (Cards.Any())
+    {
+        <div class="weather-card-container">
+            @foreach (var card in Cards)
+            {
+                <WeatherCardComponent Card="card" OnCardSelected="OnCardSelected"></WeatherCardComponent>
+            }
+        </div>
+    }
+    @* else
+    {
+    <div class="weather-card-placeholder">
+    </div>
+    } *@
+</div>
+
+@code {
+    [Parameter] public List<WeatherCard> Cards { get; set; } = new();
+    [Parameter] public EventCallback<string> OnCardSelected { get; set; }
+    [Parameter] public bool Title { get; set; } = false;
+}

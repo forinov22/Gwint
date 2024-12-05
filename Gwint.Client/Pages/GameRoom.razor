@@ -60,7 +60,10 @@
                 <div class="opponent-selected-deck">Opponent selected deck: @_opponentDeck.ToString()</div>
             }
         }
-        <WeatherCardComponent Cards="@weatherCards" OnCardSelected="@HandleWeatherCardClick" />
+        @if (_room.GameState.GameStatus == GameStatus.InProcess)
+        {
+            <WeatherCardRow Cards="@_room?.GameState.WeatherCards.ToList()" OnCardSelected="@HandleWeatherCardClick" />
+        }
         <PlayerInfo
             Name="@_room.GameState.Player.Name"
             DeckName="@_room.GameState.Player.Deck?.DeckType.ToString()"
@@ -79,32 +82,44 @@
                 DeckTypes="new [] { DeckType.Nilfgaardian, DeckType.Northern }"
                 OnDeckSelected="SelectDeck"/>
         }
-        
-
-        <div class="end-round">
-            <button @onclick="EndRound">End Round</button>
+        @if (_room.GameState.GameStatus == GameStatus.InProcess || _room.GameState.GameStatus == GameStatus.RoundEnded)
+        {
+            <div class="end-round">
+                <button @onclick="EndRound">End Round</button>
+            <div>Turn: @(_room.GameState.IsPlayerTurn ? "yours" : "opponent")</div>
         </div>
+        }
+        
     </div>
+    
     <div class="game-action">
         <UnitRow Cards="_room.GameState.Player.Deck?.Hand"
                  OpponentHandDeck="true"
                  RowId="hand-row" />
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"/>
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"/>
-        <UnitRow Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"/>
+        <UnitRow Opponent="true" RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[2]" Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)" RowId="siege-row" />
+        <UnitRow Opponent="true" RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[1] " Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)" RowId="ranged-row" />
+        <UnitRow Opponent="true" RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[0] " Cards="_room.GameState.Opponent?.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)" RowId="melee-row" />
 
-        
 
-            <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"
-                     RowId="melee-row" />
-            <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"
-                     RowId="ranged-row" />
-            <UnitRow Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"
-                     RowId="siege-row" />
+
+        <UnitRow RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[0]" Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Melee)"
+                 UnitRange="@UnitRange.Melee.ToString()"
+                 RowId="melee-row"
+                 SelectedRange="@(selectedRange == UnitRange.Melee)" />
+        <UnitRow RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[1]" Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Ranged)"
+                 UnitRange="@UnitRange.Ranged.ToString()"
+                 RowId="ranged-row"
+                 SelectedRange="@(selectedRange == UnitRange.Ranged)" />
+        <UnitRow RowAffected="_room.GameState.WeatherRowsAffected.Count == 0 ? false : _room.GameState.WeatherRowsAffected[2]" Cards="_room.GameState.Player.Deck?.PlayedCards.Where(c => c.UnitRange == UnitRange.Siege)"
+                 UnitRange="@UnitRange.Siege.ToString()"
+                 RowId="siege-row"
+                 SelectedRange="@(selectedRange == UnitRange.Siege)" />
             <UnitRow Cards="_room.GameState.Player.Deck?.Hand"
                      OnCardSelected="MakeMove"
                      OwnHandDeck="true"
-                     RowId="hand-row" />
+                     RowId="hand-row" 
+                     TargetRow="HandleDragStart"
+                     ObjectReference="@_objectReference"/>
        
         
 
@@ -117,7 +132,8 @@
                 Scrollable="true">
                 <UnitRow
                     Cards="_modalCards"
-                    OnCardSelected="SelectTargetCard"/>
+                    OnCardSelected="SelectTargetCard"
+                    Modal="true"/>
             </Modal>
         }
 
@@ -135,7 +151,7 @@
                 Title="@_weatherModalTitle"
                 OnClose="() => _isWeatherModalVisible = false">
                 
-                <WeatherCardComponent Cards="@_modalWeatherCard" OnCardSelected="@HandleWeatherCardClick" Title="@true"/>
+                @* <WeatherCardComponent Cards="@_modalWeatherCard" OnCardSelected="@HandleWeatherCardClick" Title="@true"/> *@
 
             </Modal>
         }
@@ -176,6 +192,8 @@
     private bool _isWeatherModalVisible = false;
     private string _weatherModalTitle = string.Empty;
 
+    private UnitRange? selectedRange;
+
     private bool _showRoundEndedModal;
     private bool _showGameEndedModal;
     private string? _roundWinner;
@@ -189,6 +207,8 @@
 
     private bool _isOpponentSkipped;
     private bool _isPlayerSkipped;
+
+    private DotNetObjectReference<GameRoom> _objectReference;
 
     private IJSObjectReference _module = null!;
 
@@ -217,6 +237,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
+        await _module.InvokeVoidAsync("changeFavicon", "swords.png");
+        _objectReference = DotNetObjectReference.Create(this);
         if (GameRoomState.CurrentRoom is null)
         {
             return;
@@ -227,7 +250,7 @@
         GameRoomService.OnOpponentJoined += opponent =>
         {
             _showAcceptGameForm = true;
-            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn, null, []));
+            _room = new GameRoomDto(_room.Id, _room.IsFree, new PlayerGameStateDto(_room.GameState.Player, opponent, _room.GameState.GameScore, _room.GameState.GameStatus, _room.GameState.IsPlayerTurn, null, [], [false, false, false]));
             StateHasChanged();
         };
 
@@ -261,7 +284,7 @@
         GameRoomService.OnPlayerMoved += state =>
         {
             // Console.WriteLine(JsonSerializer.Serialize(state));
-            
+
             _room.GameState = state;
 
             LastPlayedBy = state.IsPlayerTurn ? _room.GameState.Player.Name : _room.GameState.Opponent?.Name ?? "Opponent";
@@ -282,21 +305,20 @@
             ShowLastPlayedCard = true;
             StateHasChanged();
 
-            Console.WriteLine("here");
-
-            // Thread.Sleep(3000);
-
-
-            Console.WriteLine("not here");
 
             ShowLastPlayedCard = false;
             LastPlayedCard = null;
+
+
+
             StateHasChanged();
 
             if (_room.GameState.IsPlayerTurn && _room.GameState.Player.Deck.Hand.Count == 0 || _room.GameState.IsPlayerTurn && _isPlayerSkipped)
             {
                 MakeMove(null).GetAwaiter();
             }
+
+
         };
 
         GameRoomService.OnRoundEnded += HandleRoundEnded;
@@ -321,66 +343,87 @@
         await GameRoomService.AcceptGame(_room.Id, _room.GameState.Player.Id);
     }
 
+    private async Task HandleDragStart(UnitRange? unitRange)
+    {
+        selectedRange = unitRange;
+        StateHasChanged();
+    }
+
     private async Task SelectDeck(DeckType deck)
     {
         _showSelectDeckForm = false;
         await GameRoomService.SelectDeck(_room.Id, _room.GameState.Player.Id, deck);
     }
 
-    private async Task MakeMove(string? cardId)
+    [JSInvokableAttribute("MoveCard")]
+    public async Task MakeMove(string? cardId)
     {
-        try
-        {
-            var card = _room.GameState.Player.Deck.Hand.FirstOrDefault(c => c.Id == cardId);
+        try{
+            Console.WriteLine(_room.GameState.IsPlayerTurn);
+            if(_room.GameState.IsPlayerTurn){
+                var card = _room.GameState.Player.Deck.Hand.FirstOrDefault(c => c.Id == cardId);
 
-            if (card is null)
-                return;
+                if (card is null)
+                {   
+                    return;
+                }
 
-            _currentPlayedCardId = cardId;
+                _currentPlayedCardId = cardId;
 
-            if (card is UnitCard ucard)
-            {
-                if (ucard.UnitType == UnitType.Healer)
+                if (card is UnitCard ucard)
                 {
-                    _modalTitle = "Select a card to revive";
-                    _modalCards = _room.GameState.Player.Deck.ReleasedCards.OfType<Card>().ToList();
-                    if(_modalCards.Count == 0)
+                    if (ucard.UnitType == UnitType.Healer)
                     {
-                        await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+                        _modalTitle = "Select a card to revive";
+                        _modalCards = _room.GameState.Player.Deck.ReleasedCards.OfType<Card>().ToList();
+                        if(_modalCards.Count == 0)
+                        {
+                            // await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+                            // StateHasChanged();
+                            _isErrorModalVisible = true;
+                            StateHasChanged();
+                            return;
+                        }
+                        _isModalVisible = true;
+
                         StateHasChanged();
                         return;
                     }
-                    _isModalVisible = true;
-                    StateHasChanged();
-                    return;
-                }
 
-                if (ucard.UnitType == UnitType.Spy)
-                {
-                    _modalTitle = "Select an opponent card to spy";
-                    _modalCards = _room.GameState.Opponent.Deck.PlayedCards
-                        .Where(c => c.UnitType != UnitType.Hero)
-                        .OfType<Card>()
-                        .ToList();
-                    if (_modalCards.Count == 0)
+                    if (ucard.UnitType == UnitType.Spy)
                     {
-                        await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+                        _modalTitle = "Select an opponent card to spy";
+                        _modalCards = _room.GameState.Opponent.Deck.PlayedCards
+                            .Where(c => c.UnitType != UnitType.Hero)
+                            .OfType<Card>()
+                            .ToList();
+                        if (_modalCards.Count == 0)
+                        {
+                            await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+                            return;
+                        }
+                        _isModalVisible = true;
+                        StateHasChanged();
                         return;
                     }
-                    _isModalVisible = true;
-                    StateHasChanged();
-                    return;
+                    
                 }
-            }
-            else if (card is WeatherCard wcard)
-            {
-                weatherCards.Add(wcard);              
-            }
+                else if (card is WeatherCard wcard)
+                {
+                    weatherCards.Add(wcard);              
+                }
 
-            await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+                await GameRoomService.MakeMove(_room.Id, _room.GameState.Player.Id, cardId, null);
+            }
+        else
+            {
+                Console.WriteLine("else");
+                _isErrorModalVisible = true;
         }
-        catch (Exception e)
+    }
+    catch (Exception e)
         {
+            Console.WriteLine("catch");
             var card = _room.GameState.Player.Deck.Hand.FirstOrDefault(c => c.Id == _currentPlayedCardId);
             if (card is null) return;
             if (card is WeatherCard wcard)
@@ -487,6 +530,7 @@
         {
             await _module.InvokeVoidAsync("cleanupCardAdjustments");
             await _module.DisposeAsync();
+            _objectReference?.Dispose();
         }
     }
 }

@@ -1,71 +1,198 @@
 @using Gwint.Lib
 @inject IJSRuntime JS
-<div class="@(OpponentHandDeck ? "opponent-deck" : "unit-row")" id="@(OpponentHandDeck ? "" : @RowId)">
+<div class="@(OpponentHandDeck ? "opponent-deck" : "unit-row")" data-range-type="@UnitRange" id="@(OpponentHandDeck ? "" : @RowId)" style="@GetWeatherEffectStyle() @GetSelectedRangeStyle()">
     @if (Cards is not null && Cards.Any())
     {
         foreach (var card in Cards)
         {
             <div class="unit-card-wrapper"
                  draggable="true"
-                 id="card-@card.Id">
-                <div class="unit-card @(OwnHandDeck ? "hand own" : "") @(OpponentHandDeck ? "hand opponent" : "")" @onclick="() => SelectCard(card)">
+                 
+                 id="@(!Opponent && !OpponentHandDeck ? "card-" + @card.Id : "")">
+                <div class="unit-card @(!OwnHandDeck && !OpponentHandDeck && !Modal ? "field" : "") @(OwnHandDeck ? "own" : OpponentHandDeck ? "opponent" : "") @(Modal ? "my-modal" : "")" >
                     @if (OpponentHandDeck)
                     {
-                        <img src="/card-images/back.png" alt="Opponent Card" class="card-back" />
+                            <div class="hand bronze">
+                                <img src="/card-images/back.png" alt="Opponent Card" class="img-own" style="position: relative; top: 0;" />
+                            </div>
                     }
-                    else if (OwnHandDeck)
+                    else if (OwnHandDeck || Modal)
                     {
-                        <img src="@card.ImageUrl" alt="@card.Name" />
+                        @if (card is UnitCard uCard)
+                        {
+                            <div data-card-id="@uCard.Id"
+                                 @onclick="@(Modal ? async () => await SelectCard(uCard) : async () => {})"
+                                id="@uCard.Id"
+                                 @ondragstart="async (e) => await DragStart(e, uCard.Id, uCard.UnitRange)"
+                                 @ondrag="async (e) => await Drag(e, uCard.Id)"
+                                 @ondragend:preventDefault="true"
+                                 @ondrag:stopPropagation="true"
+                                 @ondragend="async (e) => await DragEnd(e, uCard.Id)"
+                                 data-range-type="@uCard.UnitRange.ToString()" class="front hand @(uCard.UnitType == UnitType.Hero ? "gold" : "bronze")">
+                                <img class="img-own" src="@card.ImageUrl" style="position: relative; top: 0;" alt="@card.Name" />
+                            </div>
+                            <div class="back @(uCard.UnitType == UnitType.Hero ? "gold" : "bronze")">
+                                <img src="@card.ImageUrl" alt="@card.Name" class="card-image" />
+
+                                <div class="strength-indicator">
+                                    @if (uCard.CurrentStrength < uCard.InitialStrength)
+                                    {
+                                        <img src="/card-appearance/debuff.png" class="buff-debuff-icon" alt="Debuff" />
+
+                                    }
+                                    else if (uCard.CurrentStrength > uCard.InitialStrength)
+                                    {
+                                        <img src="/card-appearance/buff.png" class="buff-debuff-icon" alt="Buff" />
+
+                                    }
+                                </div>
+
+
+
+                                <div class="strength-num-indicator">
+                                    @foreach (var digit in uCard.CurrentStrength.ToString())
+                                    {
+                                        <img src="/card-appearance/p@(digit).png" alt="@digit" class="digit-image" />
+                                    }
+                                </div>
+                                <img src="/card-appearance/@(uCard.UnitRange.ToString().ToLower()).png"
+                                     class="unit-range-icon"
+                                     alt="@uCard.UnitRange" />
+
+
+                                <div class="card-name">
+                                    @card.Name
+                                </div>
+                                <div class="card-description">
+                                    <div>Name: @uCard.Name</div>
+                                    <div>Current Strength: @uCard.CurrentStrength</div>
+                                    <div>Unit Type: @uCard.UnitType</div>
+                                    <div>Range: @uCard.UnitRange</div>
+                                </div>
+                            </div>
+                        }
+                        else if (card is WeatherCard wCard)
+                        {
+                            <div class="hand " @onclick ="async () => await SelectCard(wCard)">
+                                <WeatherCardComponent Card="wCard" />
+
+                                @* <img src="@card.ImageUrl" alt="@card.Name" class="card-image" /> *@
+                            </div>
+                            @* <div class="hand bronze">
+                                <img class="img-own" src="@card.ImageUrl" style="position: relative; top: 0;" alt="@card.Name" />
+                            </div> *@
+                        }
                     }
-                    else
+                    else 
                     {
-                        <div class="front">
-                            <img src="@card.ImageUrl" alt="@card.Name" />
+
+                        @if (card is UnitCard uCard)
+                        {
+                            <div  class="front @(uCard.UnitType == UnitType.Hero ? "gold" : "bronze")">
+                            <img src="@card.ImageUrl" alt="@card.Name" class="card-image" />
+                                <div class="strength-indicator">
+                                    @if (uCard.CurrentStrength < uCard.InitialStrength)
+                                    {
+                                            <img src="/card-appearance/debuff.png" class="buff-debuff-icon" alt="Debuff" />
+                                       
+                                    }
+                                    else if (uCard.CurrentStrength > uCard.InitialStrength)
+                                    {
+                                            <img src="/card-appearance/buff.png" class="buff-debuff-icon" alt="Buff" />
+                                       
+                                    }
+                                </div>
+                                <div class="strength-num-indicator">
+                                    @foreach (var digit in uCard.CurrentStrength.ToString())
+                                    {
+                                        <img src="/card-appearance/p@(digit).png" alt="@digit" class="digit-image" />
+                                    }
+                                </div>
+                                <img src="/card-appearance/@(uCard.UnitRange.ToString().ToLower()).png"
+                                     class="unit-range-icon"
+                                     alt="@uCard.UnitRange" />
+                             
                         </div>
-                        <div class="back">
-                            @if (card is UnitCard unitCard)
-                            {
+                        }
+                        else
+                        {
+                            <div class="front bronze">
+                                <img src="@card.ImageUrl" alt="@card.Name" class="card-image" />
+                            </div>
+                        }
+                        @if (card is UnitCard unitCard)
+                        {
+                            <div class="back @(unitCard.UnitType == UnitType.Hero ? "gold" : "bronze")">
+                            <img src="@card.ImageUrl" alt="@card.Name" class="card-image"/>
+                           
                                 <div class="strength-indicator">
                                     @if (unitCard.CurrentStrength < unitCard.InitialStrength)
                                     {
-                                        <span>
-                                            <img src="/card-images/debuff.png" class="buff-debuff-icon" alt="Debuff" />
-                                        </span>
+                                            <img src="/card-appearance/debuff.png" class="buff-debuff-icon" alt="Debuff" />
+                                       
                                     }
                                     else if (unitCard.CurrentStrength > unitCard.InitialStrength)
                                     {
-                                        <span>
-                                            <img src="/card-images/buff.png" class="buff-debuff-icon" alt="Buff" />
-                                        </span>
+                                            <img src="/card-appearance/buff.png" class="buff-debuff-icon" alt="Buff" />
+                                        
                                     }
                                 </div>
-                            }
-                            <img src="@card.ImageUrl" alt="@card.Name" />
-
-                        </div>
-                    }
-                    @if (!OpponentHandDeck)
-                    {
-                        <div class="card-name">
-                            @card.Name
-                        </div>
+                                    
+                                
+                            
+                                <div class="strength-num-indicator">
+                                    @foreach (var digit in unitCard.CurrentStrength.ToString())
+                                    {
+                                        <img src="/card-appearance/p@(digit).png" alt="@digit" class="digit-image" />
+                                    }
+                                </div>
+                                <img src="/card-appearance/@(unitCard.UnitRange.ToString().ToLower()).png"
+                                     class="unit-range-icon"
+                                     alt="@unitCard.UnitRange" />
+                            
+                            
+                                <div class="card-name">
+                                @card.Name
+                                </div>
+                                <div class="card-description">
+                                    <div>Name: @unitCard.Name</div>
+                                    <div>Current Strength: @unitCard.CurrentStrength</div>
+                                    <div>Unit Type: @unitCard.UnitType</div>
+                                    <div>Range: @unitCard.UnitRange</div>
+                                </div>
+                            </div>
+                        }
+                        else if(card is WeatherCard wcard)
+                        {
+                            <div class="hand bronze">
+            <img class="img-own" src="@card.ImageUrl" style="position: relative; top: 0;" alt="@card.Name" />
+            </div>
+                        }
                     }
                 </div>
                 
-            </div>
+           </div>
         }
+
     }
 </div>
-<script>
-    
-</script>
 
 @code {
     [Parameter] public IEnumerable<Card>? Cards { get; set; } = [];
     [Parameter] public EventCallback<string> OnCardSelected { get; set; }
     [Parameter] public string RowId { get; set; }
     [Parameter] public bool OpponentHandDeck { get; set; } = false;
+    [Parameter] public bool Opponent { get; set; } = false;
     [Parameter] public bool OwnHandDeck { get; set; } = false;
+    [Parameter] public bool Modal { get; set; } = false;
+    [Parameter] public bool RowAffected { get; set; } = false;
+    [Parameter] public string UnitRange {get; set; }
+    [Parameter] public bool SelectedRange {get; set; }
+    [Parameter]
+    public DotNetObjectReference<Gwint.Client.Pages.GameRoom> ObjectReference { get; set; }
+
+    [Parameter]
+    public EventCallback<UnitRange?> TargetRow { get; set; }
     private ElementReference _wrapperRef;
     private string CardStyle = "position: absolute; top: 0px; left: 0px;";
     private bool IsDragging = false;
@@ -79,11 +206,13 @@
 
         if (_module != null)
         {
-            await _module.InvokeVoidAsync("rotateOwnCards");
-            await _module.InvokeVoidAsync("rotateOpponentCards");
+            if (currentCardCount > 1)
+            {
+                await _module.InvokeVoidAsync("rotateOwnCards");
+                await _module.InvokeVoidAsync("rotateOpponentCards");
+            }
             await _module.InvokeVoidAsync("initializeCardEvents");
         }
-        
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -92,30 +221,65 @@
         {
 
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/game.js");
-            
-            
-            // await InitializeDragAndDrop();
-        }
-        if(_module != null){
             await _module.InvokeVoidAsync("rotateOwnCards");
             await _module.InvokeVoidAsync("rotateOpponentCards");
+
+            // await InitializeDragAndDrop();
         }
-    }
-
-    private void StartDrag(MouseEventArgs e)
-    {
-        IsDragging = true;
-    }
-
-    private void StopDrag(MouseEventArgs e)
-    {
-        IsDragging = false;
-
-        if (IsDroppedOnField(e))
+        int currentCardCount = Cards?.Count() ?? 0;
+        if (_module != null)
         {
-            OnCardSelected.InvokeAsync(selectedCard.Id); 
+            if (currentCardCount > 1)
+            {
+                await _module.InvokeVoidAsync("rotateOwnCards");
+                await _module.InvokeVoidAsync("rotateOpponentCards");
+            }
         }
     }
+
+    private async Task Drag(DragEventArgs e, string cardId)
+    {
+        await _module.InvokeVoidAsync("drag", e, cardId);
+    }
+    private async Task DragEnd(DragEventArgs e, string cardId)
+    {
+        await TargetRow.InvokeAsync(null);
+        await _module.InvokeVoidAsync("drop", e, ObjectReference);
+    }
+
+    private async Task DragStart(DragEventArgs e, string cardId, UnitRange unitRange)
+    {
+        await TargetRow.InvokeAsync(unitRange);
+        await _module.InvokeVoidAsync("dragStart", e, cardId);
+    }
+
+    private string GetWeatherEffectStyle()
+    {
+        if (RowAffected)
+        {
+            return RowId switch
+            {
+                "melee-row" => "border: 3px solid lightblue; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);",
+                "ranged-row"=> "border: 3px solid gray; box-shadow: 0 0 15px rgba(169, 169, 169, 0.7);",
+                "siege-row" => "border: 3px solid lightgray; box-shadow: 0 0 15px rgb(231 216 216 / 70%);",
+                _ => "border: 3px solid transparent;"
+            };
+        }
+
+        return "border: 3px solid transparent;";
+    }
+
+    private string GetSelectedRangeStyle()
+    {
+        if (SelectedRange)
+        {
+            return "border: 5px solid lightpurple; box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);";
+        }
+
+        return "border: 3px solid transparent;";
+    }
+
+
 
     private void OnMouseMove(MouseEventArgs e)
     {
@@ -130,10 +294,10 @@
     {
         return e.ClientY > 100;
     }
-    private void SelectCard(Card card)
+    private async Task SelectCard(Card card)
     {
         selectedCard = card;
-        OnCardSelected.InvokeAsync(card.Id);
+        await OnCardSelected.InvokeAsync(card.Id);
     }
 
     private void DeselectCard()

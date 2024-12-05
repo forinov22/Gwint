@@ -23,6 +23,7 @@ namespace Gwint.Lib
         Player CurrentPlayerTurn { get; }
         Card? LastPlayedCard { get; }
         public IEnumerable<WeatherCard> WeatherCards { get; }
+        public IList<bool> WeatherRowsAffected { get; set; }
 
         GameStatus GameStatus => GameStatus.Setup;
         GameScore GameScore { get; }
@@ -39,6 +40,7 @@ namespace Gwint.Lib
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
         public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
+        public IList<bool> WeatherRowsAffected { get; set; }
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -68,6 +70,7 @@ namespace Gwint.Lib
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
         public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
+        public IList<bool> WeatherRowsAffected { get; set; }
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -110,6 +113,7 @@ namespace Gwint.Lib
         public Player CurrentPlayerTurn => throw new NotImplementedException();
         public Card? LastPlayedCard => throw new NotImplementedException();
         public IEnumerable<WeatherCard> WeatherCards => throw new NotImplementedException();
+        public IList<bool> WeatherRowsAffected { get; set; }
 
         public GameScore GameScore => throw new NotImplementedException();
 
@@ -155,6 +159,8 @@ namespace Gwint.Lib
         public Player CurrentPlayerTurn { get; private set; } = host;
         public Card? LastPlayedCard { get; private set; }
         public IEnumerable<WeatherCard> WeatherCards => _weatherCards.AsReadOnly();
+        public IList<bool> WeatherRowsAffected { get; set; } = [false, false, false];
+
 
         public GameStatus GameStatus { get; private set; } = GameStatus.InProcess;
         public GameScore GameScore { get; private set; }
@@ -168,7 +174,7 @@ namespace Gwint.Lib
         {
             throw new NotImplementedException();
         }
-        
+
         public string? ProcessMove(string playerId, string? cardId, string? targetCardId)
         {
             GameStatus = GameStatus.InProcess;
@@ -190,11 +196,11 @@ namespace Gwint.Lib
                 return (_hostSkipped && _opponentSkipped) ? EndRound() : null;
             }
 
-            Card card = CurrentPlayerTurn.PlayCard(cardId) 
+            Card card = CurrentPlayerTurn.PlayCard(cardId)
                         ?? throw new ArgumentException($"User does not have card with id: {cardId} in their hand");
-           
+
             LastPlayedCard = card;
-            
+
             switch (card)
             {
                 case UnitCard unitCard:
@@ -208,7 +214,7 @@ namespace Gwint.Lib
             }
 
             UpdateCardScores();
-            
+
             UpdatePlayerScores();
 
             SwitchPlayerTurn();
@@ -228,23 +234,29 @@ namespace Gwint.Lib
                     case WeatherType.Frost:
                         ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Melee), 1);
                         ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Melee), 1);
+                        WeatherRowsAffected[0] = true;
                         break;
                     case WeatherType.Fog:
                         ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Ranged), 1);
                         ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Ranged), 1);
+                        WeatherRowsAffected[1] = true;
                         break;
                     case WeatherType.Rain:
                         ApplyWeatherEffect(AffectedCards(CurrentPlayerTurn.Deck.PlayedCards, UnitRange.Siege), 1);
                         ApplyWeatherEffect(AffectedCards(opponent.Deck.PlayedCards, UnitRange.Siege), 1);
+                        WeatherRowsAffected[2] = true;
                         break;
                     case WeatherType.Clear:
                         ResetWeatherEffects(CurrentPlayerTurn.Deck.PlayedCards);
                         ResetWeatherEffects(opponent.Deck.PlayedCards);
+                        WeatherRowsAffected[0] = false;
+                        WeatherRowsAffected[1] = false;
+                        WeatherRowsAffected[2] = false;
                         break;
                 }
             }
         }
-        
+
         private void UpdatePlayerScores()
         {
             GameScore = GameScore with
@@ -253,7 +265,7 @@ namespace Gwint.Lib
                 OpponentTotalScore = Opponent.GetCurrentScore()
             };
         }
-        
+
         private void ValidatePlayerTurn(string playerId)
         {
             if (CurrentPlayerTurn.Id != playerId)
@@ -285,31 +297,37 @@ namespace Gwint.Lib
 
         private void HealCard(string? targetCardId)
         {
-            if (targetCardId is null)
-                throw new ArgumentException("Target card ID cannot be null for healing.");
+            //if (targetCardId is null)
+            //    throw new ArgumentException("Target card ID cannot be null for healing.");
 
-            var targetCard = CurrentPlayerTurn.Deck.ReleasedCards
-                                 .FirstOrDefault(c => c.Id == targetCardId) 
+            if (targetCardId != null)
+            {
+                var targetCard = CurrentPlayerTurn.Deck.ReleasedCards
+                                 .FirstOrDefault(c => c.Id == targetCardId)
                              ?? throw new ArgumentException($"No released card found with ID: {targetCardId}");
 
-            CurrentPlayerTurn.HealCard(targetCard);
+                CurrentPlayerTurn.HealCard(targetCard);
+            }
         }
 
         private void SwapCardsWithOpponent(UnitCard unitCard, string? targetCardId)
         {
-            if (targetCardId is null)
-                throw new ArgumentException("Target card ID cannot be null for swapping.");
+            //if (targetCardId is null)
+            //    throw new ArgumentException("Target card ID cannot be null for swapping.");
 
             var opponent = GetOpponent();
 
             CurrentPlayerTurn.Deck.RemoveCardFromPlayed(unitCard);
             opponent.Deck.AddCardToPlayed(unitCard);
 
-            var targetCard = opponent.Deck.GetCardFromPlayedById(targetCardId) 
+            if (targetCardId != null)
+            {
+                var targetCard = opponent.Deck.GetCardFromPlayedById(targetCardId)
                              ?? throw new ArgumentException($"No played card found with ID: {targetCardId}");
 
-            opponent.Deck.RemoveCardFromPlayed(targetCard);
-            CurrentPlayerTurn.Deck.AddCardToPlayed(targetCard);
+                opponent.Deck.RemoveCardFromPlayed(targetCard);
+                CurrentPlayerTurn.Deck.AddCardToPlayed(targetCard);
+            }
         }
 
         private void HandleWeatherCard(WeatherCard weatherCard)
@@ -345,7 +363,7 @@ namespace Gwint.Lib
         private string EndRound()
         {
             string roundWinner;
-            
+
             if (GameScore.HostTotalScore > GameScore.OpponentTotalScore)
             {
                 GameScore = GameScore with { HostRoundWins = GameScore.HostRoundWins + 1 };
@@ -360,7 +378,8 @@ namespace Gwint.Lib
             {
                 GameScore = GameScore with
                 {
-                    HostRoundWins = GameScore.HostRoundWins + 1, OpponentRoundWins = GameScore.OpponentRoundWins + 1
+                    HostRoundWins = GameScore.HostRoundWins + 1,
+                    OpponentRoundWins = GameScore.OpponentRoundWins + 1
                 };
                 roundWinner = "Draw";
             }
@@ -368,9 +387,9 @@ namespace Gwint.Lib
             GameScore = GameScore with { HostTotalScore = 0, OpponentTotalScore = 0 };
             _hostSkipped = false;
             _opponentSkipped = false;
-
-            if (GameScore.HostRoundWins == 2 || GameScore.OpponentRoundWins == 2)
-            {   
+            
+            if (GameScore.HostRoundWins == 3 || GameScore.OpponentRoundWins == 3)
+            {
                 GameStatus = GameStatus.GameEnded;
                 return roundWinner;
             }
@@ -391,6 +410,11 @@ namespace Gwint.Lib
                 Opponent.Deck.RemoveCardFromPlayed(playedCard);
             }
 
+            _weatherCards.Clear();
+            WeatherRowsAffected[0] = false;
+            WeatherRowsAffected[1] = false;
+            WeatherRowsAffected[2] = false;
+
             GameStatus = GameStatus.RoundEnded;
 
             return roundWinner;
@@ -402,7 +426,7 @@ namespace Gwint.Lib
                 ? Opponent
                 : Host;
         }
-        
+
         private bool IsTurnSkipped()
         {
             return (CurrentPlayerTurn.Id == Host.Id && _hostSkipped)
